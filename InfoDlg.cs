@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Collections;
 using System.ComponentModel;
@@ -7,7 +8,7 @@ using System.Windows.Forms;
 namespace lilySharp
 {
 	/// <summary>
-	/// Summary description for InfoDlg.
+	/// Displays a user's info
 	/// </summary>
 	public class InfoDlg : System.Windows.Forms.Form, ILeafCmd
 	{
@@ -19,7 +20,7 @@ namespace lilySharp
 		/// </summary>
 		private System.ComponentModel.Container components = null;
 
-		public InfoDlg(LilyParent parent, LilyItem infoSource)
+		public InfoDlg(LilyParent parent, ILilyObject infoSource)
 		{
 			//
 			// Required for Windows Form Designer support
@@ -90,6 +91,7 @@ namespace lilySharp
 			this.infoBox.Size = new System.Drawing.Size(440, 237);
 			this.infoBox.TabIndex = 1;
 			this.infoBox.Text = "Retrieving info...";
+			this.infoBox.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.infoBox_LinkClicked);
 			// 
 			// InfoDlg
 			// 
@@ -106,17 +108,42 @@ namespace lilySharp
 		}
 		#endregion
 	
-	
+		/// <summary>
+		/// Necessary for the ILeafCmd interface.  Retrieves the user's blurb, and adds it to the text area
+		/// </summary>
+		/// <param name="msg">Message to process the response to</param>
 		public void ProcessResponse(LeafMessage msg)
 		{
-			string info = msg.Response.Replace("\n*","\n");
-			info = info.TrimStart(new Char[] { '*'});
-			infoBox.Text = info;
+			infoBox.Text = msg.Response.Replace("\n*","\n").Remove(0,1);
 		}
 
+		/// <summary>
+		/// Closes the dialog
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
 		private void closeBtn_Click(object sender, System.EventArgs e)
 		{
 			this.Close();
+		}
+
+		/// <summary>
+		/// Open the link in the default application
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
+		private void infoBox_LinkClicked(object sender, System.Windows.Forms.LinkClickedEventArgs e)
+		{
+			try
+			{
+				ProcessStartInfo startInfo = new ProcessStartInfo(e.LinkText);
+				startInfo.UseShellExecute = true;
+				System.Diagnostics.Process.Start(startInfo);
+			}
+			catch(Win32Exception)
+			{
+				MessageBox.Show("Error Starting process " + e.LinkText);
+			}
 		}
 	}
 }

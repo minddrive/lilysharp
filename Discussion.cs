@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Collections;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace lilySharp
@@ -10,15 +11,14 @@ namespace lilySharp
 	/// The GUI window for a discussion
 	/// </summary>
 	///
-	public class DiscussionWindow : LilyWindow
+	public class DiscussionWindow : LilyWindow, ILeafCmd
 	{
 		private System.Windows.Forms.ListBox userList;
 		private System.Windows.Forms.Splitter splitter1;
 		
-		private Discussion discussion;
-		private MenuItem discItem;
+		private IDiscussion discussion;
 		private ToolTip blurbTip;
-		private User rightClickedUser;
+		private IUser rightClickedUser;
 		private System.Windows.Forms.ContextMenu userListMenu;
 		private System.Windows.Forms.MenuItem menuItem5;
 		private System.Windows.Forms.MenuItem infoItem;
@@ -39,7 +39,7 @@ namespace lilySharp
 		/// </summary>
 		/// <param name="disc">The discussion this window is for</param>
 		/// <param name="parent">This window's parent</param>
-		public DiscussionWindow(Discussion disc, LilyParent parent) : base(parent)
+		public DiscussionWindow(IDiscussion disc, LilyParent parent) : base(parent)
 		{
 			//
 			// Required for Windows Form Designer support
@@ -53,9 +53,6 @@ namespace lilySharp
 			this.discussion = disc;
 			this.Text = disc.Name + " [ " + disc.Title + " ]";
 
-			discItem = new MenuItem(disc.Name);
-			parent.DiscMenu.MenuItems.Add(discItem);
-			discItem.Click += new EventHandler(this.disc_Click);
 			blurbTip = new ToolTip();
 			allowClose = false;
 		}
@@ -74,8 +71,6 @@ namespace lilySharp
 			}
 			
 			discussion.Window = null;
-			discItem.Click -= new EventHandler(this.disc_Click);
-			mdiParent.DiscMenu.MenuItems.Remove(discItem);
 			base.Dispose( disposing );
 			
 		}
@@ -109,6 +104,7 @@ namespace lilySharp
 			this.chatArea.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
 			this.chatArea.Size = new System.Drawing.Size(384, 261);
 			this.chatArea.Visible = true;
+			this.chatArea.VisibleChanged += new System.EventHandler(this.chatArea_VisibleChanged);
 			// 
 			// sendBtn
 			// 
@@ -182,7 +178,7 @@ namespace lilySharp
 			this.splitter1.TabIndex = 4;
 			this.splitter1.TabStop = false;
 			// 
-			// DiscussionWindow
+			// IDiscussionWindow
 			// 
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
 			this.ClientSize = new System.Drawing.Size(472, 285);
@@ -191,8 +187,8 @@ namespace lilySharp
 																		  this.chatArea,
 																		  this.userList,
 																		  this.panel1});
-			this.Name = "DiscussionWindow";
-			this.Text = "DiscussionWindow";
+			this.Name = "IDiscussionWindow";
+			this.Text = "IDiscussionWindow";
 			this.panel1.ResumeLayout(false);
 			this.ResumeLayout(false);
 
@@ -207,13 +203,26 @@ namespace lilySharp
 		protected override void sendBtn_Click(object sender, System.EventArgs e)
 		{
 			if(userText.Text.StartsWith("/"))
-				mdiParent.Out.WriteLine(userText.Text);
+			{
+				LeafMessage msg = new LeafMessage(userText.Text, "userCmd", this);
+				mdiParent.PostMessage(msg);
+
+				//	mdiParent.Out.WriteLine(userText.Text);
+			}
+				/*
+				 * TODO: Check that the sender is a valid user name.  If not, just post the message
+				 */
+			else if(Regex.Match(userText.Text, @"^[^;:]*[;:]").Success)
+			{
+				LeafMessage msg = new LeafMessage(userText.Text, "msgToDest", this);
+				mdiParent.PostMessage(msg);
+			}
 			else if(userText.Text.ToUpper() == "&RTF")
 				Post(chatArea.Rtf);
 			else
 			{
+				// Need to replace spaces in the name with underscores, or else lily will think the line ends early
 				mdiParent.Out.WriteLine(discussion.Name.Replace(' ', '_') + ";" + userText.Text);
-			//	Post( mdiParent.Me ,userText.Text);
 			}
 			
 			userText.Clear();
@@ -225,10 +234,6 @@ namespace lilySharp
 		/// <param name="notify">The message to show</param>
 		public override void Post(NotifyEvent notify)
 		{
-			Form currentChild = mdiParent.ActiveMdiChild;
-			if(!Visible) Show();
-			currentChild.Focus();
-
 			base.Post(notify);
 		}
 
@@ -238,14 +243,13 @@ namespace lilySharp
 		/// <param name="notify">The emote message to show</param>
 		public void PostEmote(NotifyEvent notify)
 		{
-			if(!Visible) Show();
 			/*
 			 * Inform if multiple recipients
 			 */
 			if(notify.Recipients.Length > 1)
 			{
 				string recipList = new string(' ',0);
-				foreach(LilyItem recip in notify.Recipients)
+				foreach(ILilyObject recip in notify.Recipients)
 				{
 					recipList += " " + recip.Name + ",";
 				}
@@ -257,9 +261,9 @@ namespace lilySharp
 
 			// Message
 			if(notify.Source == ((LilyParent)MdiParent).Me) 
-				post(notify.Source.Name + " " + notify.Value + "\n", Color.Red);
+				post(notify.Source.Name + notify.Value + "\n", Color.Red);
 			else 
-				post(notify.Source.Name + " " + notify.Value + "\n", Color.Blue);
+				post(notify.Source.Name + notify.Value + "\n", Color.Blue);
 		}
 
 		/// <summary>
@@ -270,7 +274,7 @@ namespace lilySharp
 		{
 			foreach(string member in members)
 			{
-				userList.Items.Add( mdiParent.Handles[member]);
+				userList.Items.Add( mdiParent.Database[member]);
 			}
 			userList.Sorted = true;
 		}
@@ -279,7 +283,7 @@ namespace lilySharp
 		/// Remove the user from the member list
 		/// </summary>
 		/// <param name="member">The user to remove</param>
-		public void RemoveMember(User member)
+		public void RemoveMember(IUser member)
 		{
 			userList.Items.Remove(member);
 		}
@@ -297,18 +301,18 @@ namespace lilySharp
 			Brush myBrush = Brushes.Orange;
 			if(e.Index != -1)
 			{
-				switch( ((User)userList.Items[e.Index]).State)
+				switch( ((IUser)userList.Items[e.Index]).State)
 				{
-					case User.States.Here:
+					case States.Here:
 						myBrush = Brushes.Black;
 						break;
-					case User.States.Away:
+					case States.Away:
 						myBrush = Brushes.Maroon;
 						break;
-					case User.States.Detached:
+					case States.Detached:
 						myBrush = Brushes.Gray;
 						break;
-					case User.States.None:
+					case States.Disconnected:
 						myBrush = Brushes.Red;
 						break;
 					default:
@@ -331,11 +335,11 @@ namespace lilySharp
 		{
 			if(userList.IndexFromPoint(e.X, e.Y) != -1)
 			{
-				User hoveredUser = (User)userList.Items[userList.IndexFromPoint(e.X, e.Y)];
-				if(hoveredUser.Blurb == "")
-					blurbTip.SetToolTip(userList, "State: " + hoveredUser.State);
+				IUser hoveredIUser = (IUser)userList.Items[userList.IndexFromPoint(e.X, e.Y)];
+				if(hoveredIUser.Blurb == "")
+					blurbTip.SetToolTip(userList, "State: " + hoveredIUser.State);
 				else
-					blurbTip.SetToolTip(userList, hoveredUser.Blurb + "\nState: " + hoveredUser.State);
+					blurbTip.SetToolTip(userList, hoveredIUser.Blurb + "\nState: " + hoveredIUser.State);
 			}
 			else
 				blurbTip.RemoveAll();
@@ -347,9 +351,9 @@ namespace lilySharp
 		/// <param name="notify">SLCP notify event</param>
 		protected override void updateUser(NotifyEvent notify)
 		{
-			if( userList.Items.Contains( notify.Source))
+			if( userList.Items.Contains( notify.Source) && notify.Notify)
 			{
-				chatArea.AppendText(notify.Time.TimeOfDay.ToString() + " ");
+				if(notify.Stamp) chatArea.AppendText(notify.Time.TimeOfDay.ToString() + " ");
 				switch(notify.Event)
 				{
 					case "away":
@@ -362,7 +366,7 @@ namespace lilySharp
 						post(notify.Source + " has connected\n", Color.Maroon);
 						break;
 					case "blurb":
-						post(notify.Source + "[" + ((User)notify.Source).Blurb + "] -> [" + notify.Value + "]\n", Color.Maroon);
+						post(notify.Source + "[" + ((IUser)notify.Source).Blurb + "] -> [" + notify.Value + "]\n", Color.Maroon);
 						break;
 					case "detach":
 						post(notify.Source + " has detached " + notify.Value + "\n", Color.Maroon);
@@ -371,21 +375,27 @@ namespace lilySharp
 						post(notify.Source + " has attached\n", Color.Maroon);
 						break;
 					case "quit":
-						foreach(LilyItem recip in notify.Recipients)
+						foreach(ILilyObject recip in notify.Recipients)
 						{
+							// See if this discussion is the one being quit
 							if(recip == this.discussion)
 							{
 								post(notify.Source + " has quit\n", Color.Maroon);
 								userList.Items.Remove(notify.Source);
+
+								// If I am the one quitting...
 								if(notify.Source == mdiParent.Me)
 								{
 									allowClose = true;
 									discussion.Window = null;
+
+										// If the window is open, keep it open so the user can still review
 									if(Visible)
 									{
 										post("*** You have left this discussion ***\n", Color.Red);
 										sendBtn.Enabled = false;
 									}
+										// If the window is closed, just end its life
 									else
 										Dispose();
 								}
@@ -413,7 +423,7 @@ namespace lilySharp
 							post("*** This discussion has been destroyed by " + notify.Source + " ***", Color.Red);
 							sendBtn.Enabled = false;
 							this.allowClose = true;
-							mdiParent.Handles[discussion.Handle] = null;
+							mdiParent.Database[discussion.Handle] = null;
 						}
 						else
 						{
@@ -449,7 +459,7 @@ namespace lilySharp
 						if(notify.Recipients != null)
 						{
 							post("     Recip: ", Color.Red);
-							foreach(LilyItem recip in notify.Recipients)
+							foreach(ILilyObject recip in notify.Recipients)
 							{
 								post(recip.Name + ", ", Color.Red);
 							}
@@ -457,9 +467,31 @@ namespace lilySharp
 						}
 						break;
 				} // end case
-
-				this.userList.Invalidate();
 			} // end if
+			
+			if(userList.Items.Contains(notify.Source))
+				userList.Invalidate();
+		}
+
+		public void ProcessResponse(LeafMessage msg)
+		{
+			if(msg.Tag == "userCmd")
+			{
+			
+				chatArea.SelectionFont = new Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
+				chatArea.SelectionColor = Color.Gray;
+
+				chatArea.AppendText(msg.Response);
+
+				chatArea.SelectionFont = new Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
+				chatArea.SelectionColor = Color.Black;
+			}
+			else if(msg.Tag == "msgToDest")
+			{
+				chatArea.SelectionColor = Color.DarkGray;
+				chatArea.AppendText(msg.Response);
+			}
+
 		}
 
 		/// <summary>
@@ -472,8 +504,14 @@ namespace lilySharp
 			if(!Visible) Show();
 		}
 
+		/// <summary>
+		/// Disable info/memo/finger menu items if the user does not have those options
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event Arguments</param>
 		private void userListMenu_Popup(object sender, System.EventArgs e)
 		{
+			// Disable all menu items if no user was right-clicked on
 			if(userList.IndexFromPoint(userList.PointToClient(Cursor.Position)) == -1)
 			{
 				infoItem.Enabled = false;
@@ -483,32 +521,64 @@ namespace lilySharp
 				return;
 			}
 
-			rightClickedUser = (User)userList.Items[userList.IndexFromPoint(userList.PointToClient(Cursor.Position))];
+			// Edit the menu to reflect the properties of the right-clicked user
+			rightClickedUser = (IUser)userList.Items[userList.IndexFromPoint(userList.PointToClient(Cursor.Position))];
 			infoItem.Enabled = rightClickedUser.Info;
 			memoItem.Enabled = rightClickedUser.Memo;
 			fingerItem.Enabled = rightClickedUser.Finger;
 			pmItem.Enabled = true;
 		}
 
+		/// <summary>
+		/// Displays a user's info when the menu item is clicked
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
 		private void infoItem_Click(object sender, System.EventArgs e)
 		{
 			InfoDlg info = new InfoDlg(mdiParent, rightClickedUser);
 			info.Show();
 		}
 
+		/// <summary>
+		/// Displays a user's memo when the menu item is clicked
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
 		private void memoItem_Click(object sender, System.EventArgs e)
 		{
-			MessageBox.Show("Implement me!");
+			MemoDlg memo = new MemoDlg(mdiParent, this.rightClickedUser);
+			memo.Show();
 		}
 
+		/// <summary>
+		/// Displays a user's finger info when the menu item is clicked
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
 		private void fingerItem_Click(object sender, System.EventArgs e)
 		{
 			MessageBox.Show("Implement me!");
 		}
 
+		/// <summary>
+		/// Creates a new Private Message window to the user
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
 		private void pmItem_Click(object sender, System.EventArgs e)
 		{
 			mdiParent.createPM(rightClickedUser);
+		}
+
+		/// <summary>
+		/// Indicates all unseen messages have been shown
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
+		private void chatArea_VisibleChanged(object sender, System.EventArgs e)
+		{
+			if(Visible) mdiParent.JoinedDiscList.ClearMsg(this.discussion);
 		}
 	
 	}

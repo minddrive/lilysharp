@@ -5,12 +5,13 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Collections;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace lilySharp
 {
 	/// <summary>
-	/// Base class for the Discussion and private message windows.  Also functions as the console window
+	/// Base class for the IDiscussion and private message windows.  Also functions as the console window
 	/// </summary>
 	public class LilyWindow : System.Windows.Forms.Form
 	{
@@ -25,11 +26,51 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem menuItem1;
 		private System.Windows.Forms.MenuItem copyItem;
 
+		#region Imported Structs/Methods
+
+		private const Int32 CFM_LINK = 0x20;
+		private const Int32 CFE_LINK = 0x20;
+		private const Int32 CFM_COLOR = 0x40000000;
+		private const Int32 CFE_AUTOCOLOR = 0x40000000;
+		private const Int32 SCF_SELECTION = 0x1;
+		private const Int32 WM_USER  = 0x400;
+		private const Int32 EM_SETCHARFORMAT = WM_USER + 68;
+
+		[ StructLayout (LayoutKind.Sequential)]
+			private struct STRUCT_CHARFORMAT2
+			{
+				public Int32  cbSize;
+				public Int32  dwMask;
+				public Int32  dwEffects;
+				public Int32  yHeight;
+				public Int32  yOffset;
+				public Int32  crTextColor;
+				public byte   bCharSet;
+				public byte   bPitchAndFamily;
+			    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+				public char[] szFaceName;
+				public Int16  wWeight;
+				public Int16  sSpacing;
+				public Int32  lcid;
+				public Int32  dwReserved;
+				public Int16  sStyle;
+				public Int16  wKerning;
+				public byte   bUnderlineType;
+				public byte   bAnimation;
+				public byte   bRevAuthor;
+				public byte   bReserved1;
+			}
+
+		[DllImport("user32.dll")]
+			private static extern Int32 SendMessage(IntPtr hWnd, Int32 msg, Int32 wParm, IntPtr lParm);
+
 		[DllImport("user32.dll")]
 			private static extern bool HideCaret(IntPtr hwnd);
 
 		[DllImport("kernel32.dll")]
 			private static extern int GetLastError();
+		
+		#endregion
 
 		/// <summary>
 		/// Required designer variable.
@@ -52,7 +93,7 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Initialize the form, and subscribe to the updateUser event
+		/// Initialize the form, and subscribe to the updateIUser event
 		/// </summary>
 		/// <param name="parent">This window's parent</param>
 		public LilyWindow(LilyParent parent)
@@ -69,7 +110,6 @@ namespace lilySharp
 			this.MdiParent = parent;
 
 			parent.UpdateUser += new LilyParent.updateUserDelegate(updateUser);
-			chatArea.GotFocus += new EventHandler(this.chatArea_focused);
 
 		}
 
@@ -226,9 +266,9 @@ namespace lilySharp
 		/// <param name="e">Event arguments</param>
 		/// <remarks>
 		/// <list type="bullet">Client commands
-		/// <item><description>&id itemName - displays the object ID of the User/Discussion matching the name</description></item>
-		/// <item><description>&name oID - displays the name of the User/Discussion with the given object ID</description></item>
-		/// <item><description>&state itemName - displays the state of the User/Discussion matching the name</description></item>
+		/// <item><description>&id itemName - displays the object ID of the IUser/IDiscussion matching the name</description></item>
+		/// <item><description>&name oID - displays the name of the IUser/IDiscussion with the given object ID</description></item>
+		/// <item><description>&state itemName - displays the state of the IUser/IDiscussion matching the name</description></item>
 		/// </list>
 		/// </remarks>
 		protected virtual void sendBtn_Click(object sender, System.EventArgs e)
@@ -245,7 +285,7 @@ namespace lilySharp
 			else if(userText.Text.StartsWith("&name"))
 			{
 				string id = userText.Text.Substring(6);
-				LilyItem item = (LilyItem)mdiParent.Handles[id];
+				ILilyObject item = (ILilyObject)mdiParent.Database[id];
 				if(item == null)
 					Post(id + " was not found in my object database.");
 				else
@@ -260,7 +300,7 @@ namespace lilySharp
 				}
 				else
 				{
-					User user = (User)mdiParent.Handles[mdiParent.getObjectId(name)];
+					IUser user = (IUser)mdiParent.Database[mdiParent.getObjectId(name)];
 					Post(name + " is " + user.State);
 				}
 			}
@@ -279,13 +319,20 @@ namespace lilySharp
 		/// <param name="e">Event arguments</param>
 		protected virtual void chatArea_LinkClicked(object sender, System.Windows.Forms.LinkClickedEventArgs e)
 		{
-			ProcessStartInfo startInfo = new ProcessStartInfo(e.LinkText);
-			startInfo.UseShellExecute = true;
-			System.Diagnostics.Process.Start(startInfo);
+			try
+			{
+				ProcessStartInfo startInfo = new ProcessStartInfo(e.LinkText);
+				startInfo.UseShellExecute = true;
+				System.Diagnostics.Process.Start(startInfo);
+			}
+			catch(Win32Exception)
+			{
+				MessageBox.Show("Error Starting process " + e.LinkText);
+			}
 		}
 
 		/// <summary>
-		/// Displays the message in the User/Discussion's window
+		/// Displays the message in the IUser/IDiscussion's window
 		/// </summary>
 		/// <param name="notify">Notify event that holds the message information</param>
 		public virtual void Post(NotifyEvent notify)
@@ -296,7 +343,7 @@ namespace lilySharp
 			if(notify.Recipients.Length > 1)
 			{
 				string recipList = new string(' ',0);
-				foreach(LilyItem recip in notify.Recipients)
+				foreach(ILilyObject recip in notify.Recipients)
 				{
 					recipList += " " + recip.Name + ",";
 				}
@@ -314,7 +361,7 @@ namespace lilySharp
 		}
 	
 		/// <summary>
-		/// Displays the text in the User/Discussion/console window
+		/// Displays the text in the IUser/IDiscussion/console window
 		/// </summary>
 		/// <param name="message">Text to display</param>
 		public virtual void Post(string message)
@@ -338,7 +385,7 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Needs to be overriden in Discussion/User windows to handle status change Notify events
+		/// Needs to be overriden in IDiscussion/IUser windows to handle status change Notify events
 		/// </summary>
 		/// <param name="notify">The Notify event to act on</param>
 		protected virtual void updateUser(NotifyEvent notify)
@@ -395,6 +442,8 @@ namespace lilySharp
 		{
 			if(chatArea.SelectedText.Length == 0)
 				copyItem.Enabled = false;
+			else
+				copyItem.Enabled = true;
 		}
 
 		/// <summary>
@@ -406,19 +455,53 @@ namespace lilySharp
 		{
 			Clipboard.SetDataObject(chatArea.SelectedText, true);
 		}
-
-		private void chatArea_focused(object sender, System.EventArgs e)
+	
+		/// <summary>
+		/// NOT ENABLED: Flags a selectiong of text as a link
+		/// </summary>
+		/// <param name="link">True toggles the link on, false off</param>
+		/// <remarks>
+		/// The links don't persist between hiding/showing of the window.  May have to do with the underlying RichEdit control being too old a version.
+		/// Uses the Win32 API to send the link setting message to the underlying RichEdit Control.
+		/// </remarks>
+		private void setSelectionLink(bool link)
 		{
-			if(!HideCaret(this.chatArea.Handle))
-				chatArea.AppendText("Caret Hiding failed: " + GetLastError().ToString() + "\n");
-			
-			//chatArea.AppendText(HideCaret((int)this.Handle).ToString());
-		}
+			// Create and populate the CHARFORMAT2 struct
+			STRUCT_CHARFORMAT2 cf2;
+			cf2.bAnimation = 0;
+			cf2.bCharSet = 0;
+			cf2.bPitchAndFamily = 0;
+			cf2.bReserved1 = 0;
+			cf2.bRevAuthor = 0;
+			cf2.bUnderlineType = 0;
+			cf2.cbSize = 0;
+			cf2.dwReserved = 0;
+			cf2.lcid = 0;
+			cf2.sSpacing = 0;
+			cf2.sStyle = 0;
+			cf2.szFaceName = new String(' ', 32).ToCharArray();
+			cf2.wKerning = 0;
+			cf2.wWeight = 0;
+			cf2.yHeight = 0;
+			cf2.yOffset = 0;
+			cf2.dwMask = CFM_LINK;
+			cf2.dwEffects =  link ? CFE_LINK: 0;
+			cf2.crTextColor = 0;
+			cf2.cbSize = Marshal.SizeOf(cf2) + Marshal.SizeOf(cf2.cbSize);      // Need to add SizeOf cbSize because SizeOf(cf2) does not take the size of that parameter into account
 
-		private void chatArea_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
-		{
-			this.userText.Text += e.KeyChar;
-			//e.Handled = true;
+			// Allocate the memory, and load in the CHARFORMAT2 struct into the lparam
+			IntPtr lParam = Marshal.AllocCoTaskMem(Marshal.SizeOf(cf2));
+			Marshal.StructureToPtr(cf2, lParam, false);
+
+			// Send the formatting message to the RichEdit control
+			Int32 result = SendMessage(chatArea.Handle, EM_SETCHARFORMAT, SCF_SELECTION, lParam);
+
+			// If there's an error, show the error number (Getting the actual error text is more work than it's worth
+			if(result == 0)
+                MessageBox.Show("Link setting error: " + GetLastError());
+
+			// Always be kind to memory, and free it after use
+			Marshal.FreeCoTaskMem(lParam);
 		}
 	}
 }

@@ -7,7 +7,7 @@ using System.Windows.Forms;
 namespace lilySharp
 {
 	/// <summary>
-	/// Summary description for Form1.
+	/// Allows a user to pick their username from their reserved names list
 	/// </summary>
 	public class SelectName : System.Windows.Forms.Form
 	{
@@ -15,12 +15,16 @@ namespace lilySharp
 		private System.Windows.Forms.Button OkBtn;
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.Button cancelBtn;
-		private string name;
+
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
 		private System.ComponentModel.Container components = null;
 
+		/// <summary>
+		/// Constructor
+		/// </summary>
+		/// <param name="nameList">Comma delimited list of reserved names</param>
 		public SelectName(string nameList)
 		{
 			//
@@ -78,7 +82,6 @@ namespace lilySharp
 			this.OkBtn.Name = "OkBtn";
 			this.OkBtn.TabIndex = 2;
 			this.OkBtn.Text = "OK";
-			this.OkBtn.Click += new System.EventHandler(this.OkBtn_Click);
 			// 
 			// groupBox1
 			// 
@@ -108,22 +111,21 @@ namespace lilySharp
 																		  this.groupBox1,
 																		  this.OkBtn});
 			this.Name = "SelectName";
-			this.Text = "User Name Selection";
+			this.Text = "IUser Name Selection";
 			this.groupBox1.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
 		#endregion
 
-		private void OkBtn_Click(object sender, System.EventArgs e)
-		{
-			name = (string) this.userNameBox.Items[userNameBox.SelectedIndex];
-		}
 	
+		/// <summary>
+		/// 
+		/// </summary>
 		public string UserName
 		{
 			get
-			{ return name; }
+			{ return userNameBox.Items[userNameBox.SelectedIndex] as string; }
 		}
 	}
 }

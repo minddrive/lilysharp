@@ -22,11 +22,8 @@ namespace lilySharp
 	public class LilyParent : System.Windows.Forms.Form, ILeafCmd
 	{
 		public delegate void updateUserDelegate(NotifyEvent notify);
-		public delegate void createDiscWindowDelegate(LilyItem disc);
-		public delegate void createPMDelegate(LilyItem user);
 		public delegate void eventDelegate(string line);
-		public delegate void whereDelegate(String[] discs);
-		public delegate void EmptyInvokeDelegate();
+		private delegate void dispatchDelegate(Hashtable table);
 
 		private System.Windows.Forms.MainMenu mainMenu1;
 		private System.Windows.Forms.MenuItem fileItem;
@@ -40,31 +37,40 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem connectItem;
 		private bool connected = false;
 		private Thread listen;
-		private LilyWindow system;
-		private User me;
-		private Hashtable handles = new Hashtable();
+		private LilyWindow console;
+		private DiagConsole diag;
+		private IUser me;
+		private HashDb database = new HashDb();
 		private ArrayList commandQueue = new ArrayList();
 		private LoginDialog loginDlg;
-		private System.Windows.Forms.MenuItem disconnectItem;
+		private JoindDiscWnd joinedDiscList;
+		private System.Windows.Forms.StatusBarPanel connectPanel;
+		private System.Windows.Forms.StatusBarPanel msgPanel;
+		private System.Windows.Forms.MenuItem detachItem;
 		private System.Windows.Forms.MenuItem windowItem;
 		private System.Windows.Forms.MenuItem cascadeItem;
 		private System.Windows.Forms.MenuItem horizontalItem;
 		private System.Windows.Forms.MenuItem verticalItem;
-		private System.Windows.Forms.MenuItem menuItem5;
 		private System.Windows.Forms.MenuItem discList;
 		private System.Windows.Forms.MenuItem joinItem;
 		private System.Windows.Forms.MenuItem createItem;
 		private System.Windows.Forms.StatusBar statusBar;
 		private System.Windows.Forms.MenuItem menuItem1;
 		private System.Windows.Forms.MenuItem menuItem2;
+		private System.Windows.Forms.ToolBar toolBar1;
+		private System.Windows.Forms.ToolBarButton discBtn;
+		private System.Windows.Forms.ImageList toolbarLst;
+		private System.Windows.Forms.ToolBarButton connectBtn;
+		private System.Windows.Forms.ToolBarButton disconnectBtn;
+		private System.Windows.Forms.MenuItem helpItem;
+		private System.Windows.Forms.MenuItem diagConsoleItem;
+		private System.ComponentModel.IContainer components;
 
 		public event updateUserDelegate UpdateUser;
 
 		/// <summary>
-		/// Required designer variable.
+		/// Contructerator
 		/// </summary>
-		private System.ComponentModel.Container components = null;
-
 		public LilyParent()
 		{
 			//
@@ -72,9 +78,31 @@ namespace lilySharp
 			//
 			InitializeComponent();
 
-			//
-			// TODO: Add any constructor code after InitializeComponent call
-			//
+
+			/*
+			 * Create status bar
+			 */
+			// Status panel
+			connectPanel = new StatusBarPanel();
+			connectPanel.Text = "Not Connected";
+
+			// Message notification panel
+			msgPanel = new StatusBarPanel();
+			msgPanel.Text = "No new messages";
+			msgPanel.Alignment = HorizontalAlignment.Center;
+			msgPanel.BorderStyle = StatusBarPanelBorderStyle.Sunken;
+			msgPanel.AutoSize = StatusBarPanelAutoSize.Contents;
+
+			StatusBarPanel spacer = new StatusBarPanel();
+			spacer.AutoSize = StatusBarPanelAutoSize.Spring;
+			
+			statusBar.Panels.Add(connectPanel);
+			statusBar.Panels.Add(spacer);
+			statusBar.Panels.Add(msgPanel);
+
+			// Window of joined discussions
+			joinedDiscList = new JoindDiscWnd(this, msgPanel);
+
 		}
 
 		/// <summary>
@@ -100,10 +128,12 @@ namespace lilySharp
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
+			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(LilyParent));
 			this.mainMenu1 = new System.Windows.Forms.MainMenu();
 			this.fileItem = new System.Windows.Forms.MenuItem();
 			this.connectItem = new System.Windows.Forms.MenuItem();
-			this.disconnectItem = new System.Windows.Forms.MenuItem();
+			this.detachItem = new System.Windows.Forms.MenuItem();
 			this.menuItem3 = new System.Windows.Forms.MenuItem();
 			this.menuItem1 = new System.Windows.Forms.MenuItem();
 			this.menuItem2 = new System.Windows.Forms.MenuItem();
@@ -111,12 +141,18 @@ namespace lilySharp
 			this.discList = new System.Windows.Forms.MenuItem();
 			this.joinItem = new System.Windows.Forms.MenuItem();
 			this.createItem = new System.Windows.Forms.MenuItem();
-			this.menuItem5 = new System.Windows.Forms.MenuItem();
 			this.windowItem = new System.Windows.Forms.MenuItem();
 			this.cascadeItem = new System.Windows.Forms.MenuItem();
 			this.horizontalItem = new System.Windows.Forms.MenuItem();
 			this.verticalItem = new System.Windows.Forms.MenuItem();
 			this.statusBar = new System.Windows.Forms.StatusBar();
+			this.toolBar1 = new System.Windows.Forms.ToolBar();
+			this.connectBtn = new System.Windows.Forms.ToolBarButton();
+			this.disconnectBtn = new System.Windows.Forms.ToolBarButton();
+			this.discBtn = new System.Windows.Forms.ToolBarButton();
+			this.toolbarLst = new System.Windows.Forms.ImageList(this.components);
+			this.helpItem = new System.Windows.Forms.MenuItem();
+			this.diagConsoleItem = new System.Windows.Forms.MenuItem();
 			this.SuspendLayout();
 			// 
 			// mainMenu1
@@ -124,14 +160,15 @@ namespace lilySharp
 			this.mainMenu1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
 																					  this.fileItem,
 																					  this.discList,
-																					  this.windowItem});
+																					  this.windowItem,
+																					  this.helpItem});
 			// 
 			// fileItem
 			// 
 			this.fileItem.Index = 0;
 			this.fileItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
 																					 this.connectItem,
-																					 this.disconnectItem,
+																					 this.detachItem,
 																					 this.menuItem3,
 																					 this.menuItem1,
 																					 this.menuItem2,
@@ -144,12 +181,12 @@ namespace lilySharp
 			this.connectItem.Text = "&Connect";
 			this.connectItem.Click += new System.EventHandler(this.connectItem_Click);
 			// 
-			// disconnectItem
+			// detachItem
 			// 
-			this.disconnectItem.Index = 1;
-			this.disconnectItem.Text = "&Disconnect";
-			this.disconnectItem.Visible = false;
-			this.disconnectItem.Click += new System.EventHandler(this.disconnectItem_Click);
+			this.detachItem.Index = 1;
+			this.detachItem.Text = "&Detach";
+			this.detachItem.Visible = false;
+			this.detachItem.Click += new System.EventHandler(this.detachItem_Click);
 			// 
 			// menuItem3
 			// 
@@ -178,8 +215,7 @@ namespace lilySharp
 			this.discList.Index = 1;
 			this.discList.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
 																					 this.joinItem,
-																					 this.createItem,
-																					 this.menuItem5});
+																					 this.createItem});
 			this.discList.Text = "Discussions";
 			// 
 			// joinItem
@@ -195,11 +231,6 @@ namespace lilySharp
 			this.createItem.Index = 1;
 			this.createItem.Text = "&Create";
 			this.createItem.Click += new System.EventHandler(this.createItem_Click);
-			// 
-			// menuItem5
-			// 
-			this.menuItem5.Index = 2;
-			this.menuItem5.Text = "-";
 			// 
 			// windowItem
 			// 
@@ -233,20 +264,74 @@ namespace lilySharp
 			// 
 			this.statusBar.Location = new System.Drawing.Point(0, 543);
 			this.statusBar.Name = "statusBar";
+			this.statusBar.ShowPanels = true;
 			this.statusBar.Size = new System.Drawing.Size(752, 22);
 			this.statusBar.TabIndex = 1;
 			this.statusBar.Text = "Not Connected";
+			// 
+			// toolBar1
+			// 
+			this.toolBar1.Buttons.AddRange(new System.Windows.Forms.ToolBarButton[] {
+																						this.connectBtn,
+																						this.disconnectBtn,
+																						this.discBtn});
+			this.toolBar1.DropDownArrows = true;
+			this.toolBar1.ImageList = this.toolbarLst;
+			this.toolBar1.Name = "toolBar1";
+			this.toolBar1.ShowToolTips = true;
+			this.toolBar1.Size = new System.Drawing.Size(752, 25);
+			this.toolBar1.TabIndex = 3;
+			this.toolBar1.ButtonClick += new System.Windows.Forms.ToolBarButtonClickEventHandler(this.toolBar1_ButtonClick);
+			// 
+			// connectBtn
+			// 
+			this.connectBtn.ImageIndex = 1;
+			this.connectBtn.ToolTipText = "Connect";
+			// 
+			// disconnectBtn
+			// 
+			this.disconnectBtn.ImageIndex = 2;
+			this.disconnectBtn.ToolTipText = "Disconnect";
+			this.disconnectBtn.Visible = false;
+			// 
+			// discBtn
+			// 
+			this.discBtn.ImageIndex = 0;
+			this.discBtn.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
+			this.discBtn.ToolTipText = "Show Joined IDiscussions";
+			// 
+			// toolbarLst
+			// 
+			this.toolbarLst.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
+			this.toolbarLst.ImageSize = new System.Drawing.Size(16, 16);
+			this.toolbarLst.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("toolbarLst.ImageStream")));
+			this.toolbarLst.TransparentColor = System.Drawing.Color.Transparent;
+			// 
+			// helpItem
+			// 
+			this.helpItem.Index = 3;
+			this.helpItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+																					 this.diagConsoleItem});
+			this.helpItem.Text = "&Help";
+			// 
+			// diagConsoleItem
+			// 
+			this.diagConsoleItem.Index = 0;
+			this.diagConsoleItem.Text = "Diag Console";
+			this.diagConsoleItem.Click += new System.EventHandler(this.diagConsoleItem_Click);
 			// 
 			// LilyParent
 			// 
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
 			this.ClientSize = new System.Drawing.Size(752, 565);
 			this.Controls.AddRange(new System.Windows.Forms.Control[] {
+																		  this.toolBar1,
 																		  this.statusBar});
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.IsMdiContainer = true;
 			this.Menu = this.mainMenu1;
 			this.Name = "LilyParent";
-			this.Text = "LilySharp v0.41 Alpha";
+			this.Text = "LilySharp v0.53.1 Alpha";
 			this.Closing += new System.ComponentModel.CancelEventHandler(this.LilyParent_Closing);
 			this.ResumeLayout(false);
 
@@ -280,33 +365,33 @@ namespace lilySharp
 			get { return outStream; }
 		}
 
-	    /// <summary>
-	    /// Allows access to the client Lily database
-	    /// </summary>
+		/// <summary>
+		/// Allows access to the client Lily database
+		/// </summary>
 		/// <value>Allows access to the client Lily database</value>
-		public Hashtable Handles
+		public HashDb Database
 		{
-			get { return handles;}
+			get { return database;}
 		}
 
 		/// <summary>
 		/// Allows access to the user's entry in the Lily database
 		/// </summary>
 		/// <value>Allows access to the user's entry in the Lily database</value>
-		public User Me
+		public IUser Me
 		{
 			get { return me; }
 		}
 
-		/// <summary>
-		/// Allows access to the discussion list menu so discussions can add themselves to it
-		/// </summary>
-		/// <value>Allows access to the discussion list menu so discussions can add themselves to it</value>
-		public MenuItem DiscMenu
+		public JoindDiscWnd JoinedDiscList
 		{
-			get{ return this.discList;}
+			get{ return joinedDiscList;}
 		}
 
+		public ToolBarButton DiscBtn
+		{
+			get{ return this.discBtn;}
+		}
 		#endregion
 
 		/// <summary>
@@ -318,6 +403,7 @@ namespace lilySharp
 		{
 			this.Close();
 		}
+
 		/// <summary>
 		/// Initiates the connection when the user hits the connect button.
 		/// </summary>
@@ -335,20 +421,14 @@ namespace lilySharp
 		{
 			/*
 			 * Establish a connection to the lily server
-			 * TODO: Make the server/port user configurable
 			 */
 			try
 			{
-				/*
-				ServerDlg selectDlg = new ServerDlg();
-				if(selectDlg.ShowDialog() == DialogResult.Cancel)
-					return;
-				*/
 				loginDlg = new LoginDialog();
 				if(loginDlg.ShowDialog() == DialogResult.Cancel)
 					return;
 
-				statusBar.Text = "Connecting...";
+				connectPanel.Text = "Connecting...";
 				tcpClient = new TcpClient(loginDlg.Server, loginDlg.Port);
 				stream    = tcpClient.GetStream();
 				outStream = new StreamWriter(stream);
@@ -359,7 +439,7 @@ namespace lilySharp
 			catch
 			{
 				MessageBox.Show("Unable to establish connection to server", "Cannot connect", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				statusBar.Text = "Cannot Connect";
+				connectPanel.Text = "Cannot Connect";
 				return;
 			}
 
@@ -367,11 +447,21 @@ namespace lilySharp
 			 * Update the GUI
 			 */
 			connectItem.Visible = false;
-			disconnectItem.Visible = true;
-			if(system == null) system = new LilyWindow(this);
-			system.MdiParent = this;
-			system.Show();
-
+			detachItem.Visible = true;
+			connectBtn.Visible = false;
+			disconnectBtn.Visible = true;
+			if(console == null) 
+			{
+				console = new LilyWindow(this);
+				console.MdiParent = this;
+				console.Show();
+			}
+			if(diag == null)
+			{
+				diag = new DiagConsole();
+				diag.MdiParent = this;
+			}
+		
 
 			/*
 			 * Login
@@ -415,19 +505,29 @@ namespace lilySharp
 					outStream.WriteLine("/detach");
 				}
 				catch(IOException)
-				{}
+				{
+					//If there is an error, it's ok because we are disconnecting anyway
+				}
+
+				// Close streams
 				outStream.Close();
 				inStream.Close();
 				stream.Close();
 				tcpClient.Close();
+
+				//update GUI
 				connected = false;
-				statusBar.Text = "Not Connected";
-				disconnectItem.Visible = false;
+				connectPanel.Text = "Not Connected";
+				detachItem.Visible = false;
 				connectItem.Visible = true;
+				connectBtn.Visible = true;
+				disconnectBtn.Visible = false;
 				joinItem.Enabled = false;
 				createItem.Enabled = false;
-				handles.Clear();
-				this.discList.MenuItems.Clear();
+
+				// Cleanup client db
+				database.Clear();
+				joinedDiscList.Clear();
 			}
 		}
 
@@ -435,17 +535,20 @@ namespace lilySharp
 		/// Handles all the waterlogin events
 		/// </summary>
 		/// <param name="line">The waterlogin event from the server</param>
-		private void handleWaterlogin(string line)
+		private void handleWaterlogin(Hashtable waterlogin)
 		{
 			/*
 			 * Handle server requests
 			 */
-			if(Parse(line, "CHALLENGE") != "")
+			if(waterlogin["CHALLENGE"] != null)
 			{
-				string challenge = Parse(line, "CHALLENGE");
-				if(challenge == "auth")
+				if(waterlogin["CHALLENGE"].ToString() == "auth")
 				{
-					if(loginDlg == null)
+					if(loginDlg.LoginValid)
+					{
+						outStream.WriteLine("%waterlogin RESPONSE=auth AUTHTYPE=plaintext LOGIN=" + loginDlg.UserName.Length + "=" + loginDlg.UserName + " PASSWORD=" + loginDlg.Password.Length + "=" + loginDlg.Password);
+					}
+					else
 					{
 						LoginDlg login = new LoginDlg();
 						if(login.ShowDialog() == DialogResult.OK)
@@ -457,27 +560,24 @@ namespace lilySharp
 							disconnect();
 						}
 					}
-					else
-					{
-						outStream.WriteLine("%waterlogin RESPONSE=auth AUTHTYPE=plaintext LOGIN=" + loginDlg.UserName.Length + "=" + loginDlg.UserName + " PASSWORD=" + loginDlg.Password.Length + "=" + loginDlg.Password);
-					}
 				}
-				else if(challenge == "blurb")
+				else if(waterlogin["CHALLENGE"].ToString() == "blurb")
 				{
-					BlurbDlg blurb = new BlurbDlg();
-					if(blurb.ShowDialog() == DialogResult.OK)
+					if(loginDlg.BlurbValid)
 					{
-						outStream.WriteLine("%waterlogin RESPONSE=blurb VALUE=" + blurb.Blurb.Length + "=" + blurb.Blurb);
+						outStream.WriteLine("%waterlogin RESPONSE=blurb VALUE=" + loginDlg.Blurb.Length + "=" + loginDlg.Blurb);
 					}
 					else
 					{
-						outStream.WriteLine("%waterlogin RESPONSE=blurb VALUE=0=");
+						BlurbDlg blurbDlg = new BlurbDlg();
+
+						blurbDlg.ShowDialog();
+						outStream.WriteLine("%waterlogin RESPONSE=blurb VALUE=" + blurbDlg.Blurb.Length + "=" + blurbDlg.Blurb);
 					}
-					
 				}
-				else if(challenge == "name")
+				else if(waterlogin["CHALLENGE"].ToString() == "name")
 				{
-					SelectName namePopup = new SelectName( Parse(line, "NAMELIST"));
+					SelectName namePopup = new SelectName( waterlogin["NAMELIST"] as string);
 					if(namePopup.ShowDialog() == DialogResult.OK)
 					{
 						string name = namePopup.UserName;
@@ -490,45 +590,44 @@ namespace lilySharp
 				}
 				else
 				{
-					system.Post(line);
+					foreach(DictionaryEntry entry in waterlogin)
+						console.Post(entry.Key + " = " + entry.Value);
 				}
 			}
 				/*
 				 * Handle server responses
 				 */
-			else if( Parse(line, "RESULT") != "")
+			else if(waterlogin["RESULT"] != null)
 			{
-				string result = Parse(line, "RESULT");
-				string status = Parse(line, "STATUS");
-				if(result == "auth")
+				if(waterlogin["RESULT"].ToString() == "auth")
 				{
-					if(status == "success")
+					if(waterlogin["STATUS"].ToString() == "success")
 					{
-						system.Post("Login successful");
+						console.Post("Login successful");
 					}
 					else
 					{
-						loginDlg.Dispose();
-						loginDlg = null;
+						loginDlg.LoginValid = false;
 						MessageBox.Show("Unable to log in.\nPlease check your username and password", "Unable to Login");
 					}
 				}
-				else if(result == "blurb")
+				else if(waterlogin["RESULT"].ToString() == "blurb")
 				{
-					if(status == "success")
+					if(waterlogin["STATUS"].ToString() == "success")
 					{
-						system.Post("Blurb accepted");
+						console.Post("Blurb accepted");
 					}
 					else
 					{
-						MessageBox.Show(Parse(line, "TEXT"), "Blurb error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+						loginDlg.BlurbValid = false;
+						MessageBox.Show(waterlogin["TEXT"].ToString(), "Blurb error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 					}
 				}
-				else if(result == "name")
+				else if(waterlogin["RESULT"].ToString() == "name")
 				{
-					if(status == "success")
+					if(waterlogin["STATUS"].ToString() == "success")
 					{
-						system.Post("Name accepted");
+						console.Post("Name accepted");
 					}
 					else
 					{
@@ -536,21 +635,33 @@ namespace lilySharp
 					}
 				}
 			}
-			else if( Parse(line, "ATTRIBUTE") != "")
+			else if(waterlogin["ATTRIBUTE"] != null)
 			{
-				system.Post( Parse(line, "ATTRIBUTE") + " = " + Parse(line, "VALUE"));
+				console.Post(waterlogin["ATTRIBUTE"] + " = " + waterlogin["VALUE"]);
 			}
-			else if( line.ToUpper() == "%WATERLOGIN END")
+			else if(waterlogin["NOTICE"] != null)
 			{
-				statusBar.Text = "Connected";
+				// We don't need to do anything with notices
+			}
+			else if(waterlogin["START"] != null)
+			{
+				// Don't need to do anything here either.
+			}
+			else if(waterlogin["END"] != null)
+			{
+				connectPanel.Text = "Connected";
 				outStream.WriteLine("/set message_echo yes");
+				outStream.WriteLine("#$# client LilySharp 0.60");
 				this.PostMessage(new LeafMessage("/where " + me.Name, "where", this));
 				joinItem.Enabled = true;
 				createItem.Enabled = true;
 			}
 			else
 			{
-				system.Post("Waterlogin: " + line);
+				console.Post("*** waterlogin ***");
+				foreach(DictionaryEntry entry in waterlogin)
+					console.Post(entry.Key + " = " + entry.Value);
+				console.Post("******************");
 			}
 		}
 
@@ -558,34 +669,29 @@ namespace lilySharp
 		/// Handles all the data events
 		/// </summary>
 		/// <param name="line">The data event from the server</param>
-		private void handleDataItem(string line)
+		private void handleDataItem(Hashtable dataAttributes)
 		{
-			string source = Parse(line, "SOURCE");
-						
-			if(source == "#0")
+			if((string)dataAttributes["SOURCE"] == "#0")
 			{
-				if(Parse(line, "NAME") == "whoami")
+				if((string)dataAttributes["NAME"] == "whoami")
 				{
-					me = (User)handles[Parse(line, "VALUE")];
-					/*
-					statusBar.Text = "Connected";
-					outStream.WriteLine("/set message_echo yes");
-					Where += new whereDelegate(this.getUserDiscs);
-					outStream.WriteLine("/where " + me.Name);
-					*/
+					me = (IUser)database[dataAttributes["VALUE"]];
 				}
 				else
 				{
-					system.Post(line);
+					console.Post("*** data ***");
+					foreach(DictionaryEntry entry in dataAttributes)
+						console.Post(entry.Key + " = " + entry.Value);
+					console.Post("******************");
 				}
 			}
 			else
 			{
-				string name = Parse(line, "NAME");
-				if(name == "members")
+
+				if(dataAttributes["NAME"] as string == "members")
 				{
 			
-					((DiscussionWindow)((Discussion)handles[source]).Window).AddMembers(Parse(line, "VALUE").Split(new char[] {','}));
+					((DiscussionWindow)database[dataAttributes["SOURCE"]].Window).AddMembers( ((string)dataAttributes["VALUE"]).Split( ((string)dataAttributes["LIST"]).ToCharArray()));
 				}
 			}
 		}
@@ -597,15 +703,15 @@ namespace lilySharp
 		/// <remarks>
 		/// Update user is not called uniformly, but per each event, because some events require it be called before the status change, and some after.
 		/// </remarks>
-		private void handleNotifyItem(string line)
+		private void handleNotifyItem(Hashtable notifyAttributes)
 		{
-			NotifyEvent notify = new NotifyEvent(line, handles);
+			NotifyEvent notify = new NotifyEvent(notifyAttributes, database);
 
 			if(notify.Source == null)
 			{
-				system.Post("*** Null source detected.  Possible database corruption.");
-				system.Post("*** One event ( " + notify.Event + " from " + Parse(line, "SOURCE") + " ) lost!");
-				system.Post("Resynching database...");
+				console.Post("*** Null source detected.  Possible database corruption.");
+				console.Post("*** One event ( " + notify.Event + " from " + notifyAttributes["SOURCE"] + " ) lost!");
+				console.Post("Resynching database...");
 				outStream.WriteLine("#$# slcp-sync");
 				return;
 			}
@@ -615,70 +721,88 @@ namespace lilySharp
 				switch(notify.Event)
 				{
 					case "private":
-						if(notify.Source == me)
-						{
-							if(notify.Recipients[0].Window == null)
-								this.Invoke(new createPMDelegate(createPM), new object[] {notify.Recipients[0]});
-
-							notify.Recipients[0].Window.Post(notify);
-							return;
-						}
-						else
-						{
-							if(notify.Source.Window == null)
-								this.Invoke(new createPMDelegate(createPM), new object[]{notify.Source});
-
-							notify.Source.Window.Post(notify);
-						}
-						break;
 					case "public":
 						// We need to be able to handle multiple recpients
-						foreach(LilyItem recipient in notify.Recipients)
+						foreach(ILilyObject recipient in notify.Recipients)
 						{
-							if( recipient.GetType() == typeof(User)  && recipient != me)
+							/*
+							 * Private message
+							 */
+							if(recipient.GetType() == typeof(IUser))
 							{
-								continue;
-							}
+								// Someone sent me a message
+								if(recipient == me)
+								{
+									if(notify.Source.Window == null)
+										createPM(notify.Source);
 
-							if( recipient.Window == null)
-							{
-								if(recipient.GetType() == typeof(User))
-									this.Invoke(new createPMDelegate(createPM), new object[]{recipient});
+									notify.Source.Window.Post(notify);
+								}
+								// I sent someone else a message
+								else if(notify.Source == me)
+								{
+									if(recipient.Window == null)
+										createPM(recipient);
+
+									recipient.Window.Post(notify);
+								}
+								// This PM has nothing to do with me
 								else
+								{
 									continue;
+								}
 							}
 
-							recipient.Window.Post(notify);
+							/*
+							 * Discussion
+							 */
+							else
+							{
+								// I'm not a member of this discussion
+								if(recipient.Window == null)
+									continue;
+
+								// Display new message notification
+								if(!recipient.Window.Visible)
+									joinedDiscList.AddMsg( recipient as IDiscussion);
+
+								// Post the message
+								recipient.Window.Post(notify);
+							}
+
 						}
 						break;
 					case "emote":
-						foreach(LilyItem recipient in notify.Recipients)
+						foreach(ILilyObject recipient in notify.Recipients)
 						{
 							if(recipient.Window == null)
 								return;
 							else
+							{
 								((DiscussionWindow)recipient.Window).PostEmote(notify);
+								if(!recipient.Window.Visible)
+									joinedDiscList.AddMsg( (IDiscussion)recipient);
+							}
 						}
 						break;
 					case "blurb":
 						if(UpdateUser != null) UpdateUser(notify);
-						((User)notify.Source).Blurb = notify.Value;
+						((IUser)notify.Source).Blurb = notify.Value;
 						break;
 					case "detach":
-					case "quit":
 					case "disconnect":
-						((User)notify.Source).State = User.States.Detached;
+						((IUser)notify.Source).State = States.Detached;
 						if(UpdateUser != null) UpdateUser(notify);
 						break;
 					case "attach":
 					case "unidle":
 					case "here":
 					case "connect":
-						((User)notify.Source).State = User.States.Here;
+						((IUser)notify.Source).State = States.Here;
 						if(UpdateUser != null) UpdateUser(notify);
 						break;
 					case "away":
-						((User)notify.Source).State = User.States.Away;
+						((IUser)notify.Source).State = States.Away;
 						if(UpdateUser != null) UpdateUser(notify);
 						break;
 					case "rename":
@@ -687,8 +811,11 @@ namespace lilySharp
 						break;
 					case "join":
 						if(notify.Source == me)
-							foreach(Discussion disc in notify.Recipients)
+							foreach(IDiscussion disc in notify.Recipients)
+							{
 								this.createDiscWindow(disc.Handle);
+								joinedDiscList.Add(disc);
+							}
 
 
 						if( notify.Recipients[0].Window != null)
@@ -696,13 +823,27 @@ namespace lilySharp
 
 						if(UpdateUser != null) UpdateUser(notify);
 						break;
+					case "quit":
+						if(notify.Source == me)
+						{
+							joinedDiscList.ClearMsg(notify.Recipients[0] as IDiscussion);
+							joinedDiscList.Remove(notify.Recipients[0] as IDiscussion);
+						}
+						if(UpdateUser != null) UpdateUser(notify);
+						break;
 					case "destroy":
 						if(UpdateUser != null) UpdateUser(notify);
-						handles.Remove(notify.Recipients[0].Handle);
+						database.Remove(notify.Recipients[0].Handle);
 						break;
 					case "retitle":
 						if(UpdateUser != null) UpdateUser(notify);
-						((Discussion)notify.Recipients[0]).Title = notify.Value;
+						((IDiscussion)notify.Recipients[0]).Title = notify.Value;
+
+						if(notify.Recipients[0].GetType() == typeof(IDiscussion) && notify.Recipients[0].Window != null)
+						{
+							joinedDiscList.Remove(notify.Recipients[0] as IDiscussion);
+							joinedDiscList.Add(notify.Recipients[0] as IDiscussion);
+						}
 						break;
 					case "ignore":
 					case "unignore":
@@ -718,11 +859,14 @@ namespace lilySharp
 					case "pa":
 					case "game":
 					case "consult":
-						system.Post(notify.Event + " Event: " + line);
+						console.Post(notify.Event + " Event: ");
+						foreach(DictionaryEntry entry in notifyAttributes)
+							console.Post(entry.Key + " = " + entry.Value);
 						break;
 					default:
-						system.Post("*** Unhandled Event: " + notify.Event + " ***");
-						system.Post(line);
+						console.Post("*** Unhandled Event: " + notify.Event + " ***");
+						foreach(DictionaryEntry entry in notifyAttributes)
+							console.Post(entry.Key + " = " + entry.Value);
 						break;
 				}
 			}
@@ -731,14 +875,14 @@ namespace lilySharp
 				/*
 				 * It's time for monster debuggin output!  Wheeeeeeeeeee
 				 */
-				system.Post("*** Exception ***");
-				system.Post("Event: " + notify.Event);
-				system.Post("Error: " + e.Message);
-				if(notify.Source != null) system.Post("Source: " + notify.Source.Name);
+				console.Post("*** Exception ***");
+				console.Post("Event: " + notify.Event);
+				console.Post("Error: " + e.Message);
+				if(notify.Source != null) console.Post("Source: " + notify.Source.Name);
 				if(notify.Recipients != null)
-					foreach(LilyItem recip in notify.Recipients)
-						system.Post("Recipient: " + recip.Name);
-				if(notify.Value != "") system.Post("Value: " + notify.Value);
+					foreach(ILilyObject recip in notify.Recipients)
+						console.Post("Recipient: " + recip.Name);
+				if(notify.Value != "") console.Post("Value: " + notify.Value);
 
 			}
 		}
@@ -747,40 +891,40 @@ namespace lilySharp
 		/// Handles the %DISC SLCP message
 		/// </summary>
 		/// <param name="line">The %disc message from the server</param>
-		private void handleDiscItem(string line)
+		private void handleDiscItem(Hashtable discAttributes)
 		{
-			Discussion newDisc = new Discussion(line);
+			IDiscussion newDisc = new Discussion(discAttributes);
 				/*
 				* If we get a %DISC of an existing discussion (someone was permitted)
 				*   we should link the window back to the discussion so we don't have 
 				*   two windows for the same disc
 				*/
-			if(handles[newDisc.Handle] != null)
-				newDisc.Window = ((Discussion)handles[newDisc.Handle]).Window;
+			if(database[newDisc.Handle] != null)
+				newDisc.Window = database[newDisc.Handle].Window;
 
-			handles[newDisc.Handle] = newDisc;
+			database[newDisc.Handle] = newDisc;
 		}
 
 		/// <summary>
 		/// Handles the %USER SLCP messages
 		/// </summary>
-		/// <param name="line">The %User message from the server</param>
-		private void handleUserItem(string line)
+		/// <param name="line">The %IUser message from the server</param>
+		private void handleUserItem(Hashtable userAttributes)
 		{
-			User newUser = new User(line);
-			if(handles[newUser.Handle] != null)
+			IUser newUser = new User(userAttributes);
+			if(database[newUser.Handle] != null)
 			{
-				((User)handles[newUser.Handle]).Blurb   = newUser.Blurb;
-				((User)handles[newUser.Handle]).Finger  = newUser.Finger;
-				((User)handles[newUser.Handle]).Info    = newUser.Info;
-				((User)handles[newUser.Handle]).Memo    = newUser.Memo;
-				((User)handles[newUser.Handle]).Name    = newUser.Name;
-				((User)handles[newUser.Handle]).Pronoun = newUser.Pronoun;
-				((User)handles[newUser.Handle]).State   = newUser.State;
+				((IUser)database[newUser.Handle]).Blurb   = newUser.Blurb;
+				((IUser)database[newUser.Handle]).Finger  = newUser.Finger;
+				((IUser)database[newUser.Handle]).Info    = newUser.Info;
+				((IUser)database[newUser.Handle]).Memo    = newUser.Memo;
+				((IUser)database[newUser.Handle]).Name    = newUser.Name;
+				((IUser)database[newUser.Handle]).Pronoun = newUser.Pronoun;
+				((IUser)database[newUser.Handle]).State   = newUser.State;
 			}
 			else
 			{
-				handles[newUser.Handle] = newUser;
+				database[newUser.Handle] = newUser;
 			}
 		}
 
@@ -805,8 +949,12 @@ namespace lilySharp
 				return;
 			}
 
+			/*
+			 * Act on the command
+			 */
 			switch(line.Substring(0, line.IndexOf(' ') ).ToUpper() )
 			{
+				// Start of command: Get the ID, and store the information in the appropriate message
 				case "%BEGIN":
 					command = line.Substring( line.IndexOf(']') + 2);
 					foreach(LeafMessage msg in commandQueue)
@@ -818,6 +966,8 @@ namespace lilySharp
 						}
 					}
 					break;
+
+				// Heart of the command: Get the server response and save it for processiong
 				case "%COMMAND":
 					command = line.Substring( line.IndexOf(']') + 2);
 					foreach(LeafMessage msg in commandQueue)
@@ -828,9 +978,10 @@ namespace lilySharp
 							return;
 						}
 					}
-					//system.Post("[" + ID + "] " + command);
-					system.Post(command);
+					console.Post(command);
 					break;
+
+				// End of the command: Send the response to the calling ILeafCmd, and remove the msg from the queue
 				case "%END":
 					command = "-none-";
 					foreach(LeafMessage msg in commandQueue)
@@ -847,7 +998,7 @@ namespace lilySharp
 					command = "-error-";
 					break;
 			}
-			//system.Post("*** ID: " + ID + "\n*** Command: " + command);
+			//console.Post("*** ID: " + ID + "\n*** Command: " + command);
 		}
 
 		/// <summary>
@@ -890,6 +1041,8 @@ namespace lilySharp
 					
 					if(line.Trim() == "") continue;
 
+					Invoke(new eventDelegate(diag.Post), new object[] { line });
+
 					wordEnd = line.IndexOf(' ');
 					if(wordEnd == -1) wordEnd = line.Length;
 
@@ -897,19 +1050,19 @@ namespace lilySharp
 					switch(command)
 					{
 						case "%WATERLOGIN":
-							Invoke(new eventDelegate(handleWaterlogin), new object[]{line});
+							Invoke(new dispatchDelegate(handleWaterlogin), new object[]{parse(line)});
 							break;
 						case "%DISC":
-							Invoke(new eventDelegate(handleDiscItem), new object[]{line});
+							Invoke(new dispatchDelegate(handleDiscItem), new object[]{parse(line)});
 							break;
 						case "%USER":
-							Invoke(new eventDelegate(handleUserItem), new object[]{line});
+							Invoke(new dispatchDelegate(handleUserItem), new object[]{parse(line)});
 							break;
 						case "%DATA":
-							Invoke(new eventDelegate(handleDataItem), new object[] {line});
+							Invoke(new dispatchDelegate(handleDataItem), new object[] {parse(line)});
 							break;
 						case "%NOTIFY":
-							Invoke(new eventDelegate(handleNotifyItem), new object[]{line});
+							Invoke(new dispatchDelegate(handleNotifyItem), new object[]{parse(line)});
 							break;
 						case "%begin":
 						case "%command":
@@ -919,33 +1072,16 @@ namespace lilySharp
 						case "%options":
 							break;
 						case "***":
-							Invoke(new eventDelegate(system.Post), new object[]{line});
+							Invoke(new eventDelegate(console.Post), new object[]{line});
 							break;
 						default:
-							this.Invoke(new eventDelegate(system.Post), new object[] {"*** UNHANDLED IDENTIFIER: " + line + " ***"});
+							this.Invoke(new eventDelegate(console.Post), new object[] {"*** UNHANDLED IDENTIFIER: " + line + " ***"});
 							break;
 					}
-
-
-					/*
-					else if(line.StartsWith("*** Redirecting connection to new port **"))
-					{
-						MessageBox.Show("Connection has been redirected", "Connection lost", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-						disconnect();
-					}
-					else if(line.StartsWith("*** Redirecting old connection to this port ***"))
-					{
-						outStream.WriteLine("#$# slcp-sync");
-					}
-					else if(line.StartsWith("(message sent to"))
-					{
-					}
-					*/
-
 				}
 				catch(IOException)
 				{
-					// User terminated the connection
+					// IUser terminated the connection
 					break;
 				}
 				catch(Exception e)
@@ -976,130 +1112,92 @@ namespace lilySharp
 		/// </summary>
 		/// <param name="sender">Sender of the event</param>
 		/// <param name="e">Event arguments</param>
-		private void disconnectItem_Click(object sender, System.EventArgs e)
+		private void detachItem_Click(object sender, System.EventArgs e)
 		{
 			if(connected)
 				disconnect();
 		}
 
 		/// <summary>
-		/// Retrieves the value of the specified token in the SLCP or waterlogin message.
+		/// Parses a line of SLCP text into token-value pairs
 		/// </summary>
-		/// <param name="str">The message to search</param>
-		/// <param name="token">The token to get the value of</param>
-		/// <returns>The value of the token, or an empty string if the token is not found</returns>
-		/// <remarks>
-		/// This is the heart of the application. It steps through the message's tokens recursively, until it has reached the end of the message, or the token has been found
-		/// </remarks>
-		public static string Parse(string str, string token)
+		/// <param name="str">SLCP line to parse</param>
+		/// <returns>A Hashtable with the tokens as keys, and the values as values</returns>
+		private Hashtable parse(string str)
 		{
-			string tok, val, type;
-			int equals     = str.IndexOf('=');
-			int space      = str.IndexOf(' ');
-			int nextEquals = str.IndexOf('=', equals + 1);
+			Hashtable table = new Hashtable();
+			
+			str += " ";  //Pad the end of the line for the last token
+			int delimIndex;
+			int nextDelimIndex;
+			string token;
 
-			// No tokens left
-			if(str.Length == 0) return "";
-			
-			
 			/*
-			 * Determine next token type
+			 * Itterate through all the tokens, and populate the hash
 			 */
-			if(space == -1) space = str.Length;
-			
-			if(equals == -1 )
-				type = "noValue";
-			else if(space < equals)
-				type = "noValue";
-			else if(nextEquals == -1 || space < nextEquals)
-				type = "fixedValue";
-			else
-				type = "variableValue";
-			
-
-
-
-
-			//if(space == -1) space = str.Length;
-
-			if(type == "noValue")
+			while(str.Length > 0)
 			{
-				//MessageBox.Show("noValue\nString:" + str);
-				tok = str.Substring(0, space);
-				
-				if(tok.ToUpper() == token)
-					return "";
+				delimIndex = str.IndexOfAny(new char[]{' ','='});
+				token = str.Substring(0, delimIndex);
+
+				//The token is valueless
+				if(str[delimIndex] == ' ')
+				{
+					table[token] = string.Empty;
+					str = str.Substring(delimIndex).TrimStart(new char[]{' '});
+				}
+
+				//There is a value
 				else
 				{
-					// Need to make sure we don't run off the end of the string
-					if(str.Length < space + 1)
-						return "";
+					nextDelimIndex = str.IndexOfAny(new char[]{' ','='}, delimIndex + 1);
+					if(nextDelimIndex == -1)
+						return table;
+
+					//The value does not contain spaces
+					if(str[nextDelimIndex] == ' ')
+					{
+						table[token] = str.Substring(delimIndex + 1, nextDelimIndex - delimIndex - 1);
+						str = str.Substring(nextDelimIndex).TrimStart(new char[]{' '});
+					}
+
+					//The value may contain a space
 					else
-						return Parse(str.Substring(space + 1), token);
+					{
+						int valLength;
+
+						// Get the lenght of the value
+						try
+						{
+							valLength = int.Parse(str.Substring(delimIndex + 1, nextDelimIndex - delimIndex - 1));
+						}
+						catch(FormatException e)
+						{
+							MessageBox.Show(e + " is not a a valid length");
+							str = str.Substring(str.IndexOf(' '));
+							continue;
+						}
+						
+						table[token] = str.Substring(nextDelimIndex + 1, valLength);
+						str = str.Substring(nextDelimIndex + valLength  + 1).TrimEnd(new char[]{' '});
+							
+					}
 				}
 			}
-			else if(type == "fixedValue")
-			{
-				//MessageBox.Show("fixedValue\nString:" + str);
-				tok = str.Substring(0, equals);
-				val = str.Substring(equals + 1, space - equals - 1);
 
-				if(tok.ToUpper() == token)
-					return val;
-				else
-				{
-					if(str.Length < space + 1)
-						return "";
-					else
-						return Parse(str.Substring(space + 1), token);
-				}
-
-			}
-			else if(type == "variableValue")
-			{
-				//MessageBox.Show("variableValue\nString:" + str);
-				int valLength;
-
-				try
-				{
-					valLength = int.Parse(str.Substring(equals + 1, nextEquals - equals - 1));
-				}
-				catch(FormatException)
-				{
-					MessageBox.Show("A number was not found where one was expected");
-					return "";
-				}
-
-				tok = str.Substring(0, equals);
-				val = str.Substring(nextEquals + 1, valLength);
-
-				if(tok.ToUpper() == token)
-					return val;
-				else
-				{
-					if(str.Length < nextEquals + valLength + 2)
-						return "";
-					else
-						return Parse(str.Substring(nextEquals + valLength + 2), token);
-				}
-			}
-			else
-			{
-				MessageBox.Show("Unrecognizeable token encountered");
-				return "";
-			}
-
+			//parse(str, table);
+			return table;
 		}
-
+		
 		/// <summary>
 		/// Creates the window for a discussion, and requests the user list of the discussion
 		/// </summary>
 		/// <param name="handle">The object ID of the discussion to create the window for</param>
 		private void createDiscWindow(string handle)
 		{
-			Discussion disc = ((Discussion)handles[handle]);
+			IDiscussion disc = ((IDiscussion)database[handle]);
 			if(disc.Window != null) return;
-			disc.Window = new DiscussionWindow( (Discussion)disc, this);
+			disc.Window = new DiscussionWindow( (IDiscussion)disc, this);
 			disc.Window.MdiParent = this;
 
 			outStream.WriteLine("#$# what " + disc.Handle);
@@ -1108,10 +1206,10 @@ namespace lilySharp
 		/// <summary>
 		/// Creates a Private Message Window
 		/// </summary>
-		/// <param name="user">The lily User to create the PM window for</param>
-		public void createPM(LilyItem user)
+		/// <param name="user">The lily IUser to create the PM window for</param>
+		public void createPM(ILilyObject user)
 		{
-			user.Window = new PrivateMsg((User)user, this);
+			user.Window = new PrivateMsg((IUser)user, this);
 			user.Window.MdiParent = this;
 			user.Window.Show();
 		}
@@ -1146,17 +1244,17 @@ namespace lilySharp
 			this.LayoutMdi(MdiLayout.TileVertical);
 		}
 		/// <summary>
-		/// Gets the Object ID of the User or Disucssion
+		/// Gets the Object ID of the IUser or Disucssion
 		/// </summary>
-		/// <param name="name">The name of the User or Discussion to get the Object ID of</param>
-		/// <returns>The Object ID of the User or Discussion</returns>
+		/// <param name="name">The name of the IUser or IDiscussion to get the Object ID of</param>
+		/// <returns>The Object ID of the IUser or IDiscussion</returns>
 		public string getObjectId(string name)
 		{
-			foreach(DictionaryEntry item in handles)
+			foreach(DictionaryEntry item in database)
 			{
 				try
 				{
-					if(((LilyItem)item.Value).Name.ToUpper() == name.ToUpper())
+					if(((ILilyObject)item.Value).Name.ToUpper() == name.ToUpper())
 						return (String)item.Key;
 				}
 				catch(NullReferenceException e)
@@ -1180,9 +1278,17 @@ namespace lilySharp
 			switch(msg.Msg)
 			{
 				case 0x0010:     //WM_CLOSE message
-				//	if(system != null) system.AllowClose = true;
-					foreach(LilyWindow window in this.MdiChildren)
-						window.AllowClose = true;
+					joinedDiscList.AllowClose = true;
+					foreach(Form window in this.MdiChildren)
+					{
+						if(window.GetType() != typeof(JoindDiscWnd))
+						{
+							if(window.GetType() == typeof(DiagConsole))
+								((DiagConsole)window).AllowClose = true;
+							else
+								((LilyWindow)window).AllowClose = true;
+						}
+					}
 					break;
 			}
 			base.WndProc(ref msg);
@@ -1195,12 +1301,13 @@ namespace lilySharp
 		/// <param name="e">Event arguments</param>
 		private void consoleItem_Click(object sender, System.EventArgs e)
 		{
-			if(system == null) system = new LilyWindow(this);
-			system.Show();
+			if(console == null) console = new LilyWindow(this);
+			console.Show();
 		}
 
 		/// <summary>
 		/// Brings up the join discussion dialog box, and sends the server the join event
+		/// TODO: Make this a non-modal dialog using the ILeafCmd interface
 		/// </summary>
 		/// <param name="sender">Sender of the event</param>
 		/// <param name="e">Event arguments</param>
@@ -1231,7 +1338,6 @@ namespace lilySharp
 		/// <param name="msg">The message to respond to</param>
 		public void ProcessResponse(LeafMessage msg)
 		{
-			system.Post("*** PROCESSING: " + msg.Response);
 			switch (msg.Tag)
 			{
 				case "where":
@@ -1247,11 +1353,37 @@ namespace lilySharp
 					foreach(String id in msg.Response.Substring(startIndex).Split(','))
 					{
 						createDiscWindow(getObjectId(id.Trim()));
+						joinedDiscList.Add((IDiscussion)database[ getObjectId(id.Trim()) ]);
 					}
 					break;
 				default:
 					break;
 			}
+		}
+
+		/// <summary>
+		/// Handle clicked toolbar buttons
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
+		private void toolBar1_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
+		{
+			if(e.Button == connectBtn)
+				connect();
+			else if(e.Button == disconnectBtn)
+			{
+				if(MessageBox.Show("Do you really want to detach?", "Detach Confermation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+					disconnect();
+			}
+			else if(e.Button == discBtn)
+				if(discBtn.Pushed) joinedDiscList.Show();
+				else               joinedDiscList.Hide();
+
+		}
+
+		private void diagConsoleItem_Click(object sender, System.EventArgs e)
+		{
+			diag.Show();
 		}
 	}
 }

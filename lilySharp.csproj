@@ -134,6 +134,10 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
+                    RelPath = "connect.ico"
+                    BuildAction = "Content"
+                />
+                <File
                     RelPath = "createDlg.cs"
                     SubType = "Form"
                     BuildAction = "Compile"
@@ -142,6 +146,20 @@
                     RelPath = "createDlg.resx"
                     DependentUpon = "createDlg.cs"
                     BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "DiagConsole.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "DiagConsole.resx"
+                    DependentUpon = "DiagConsole.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "disconnect.ico"
+                    BuildAction = "Content"
                 />
                 <File
                     RelPath = "Discussion.cs"
@@ -154,7 +172,16 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
+                    RelPath = "discWnd.ico"
+                    BuildAction = "Content"
+                />
+                <File
                     RelPath = "Events.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "HashDb.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -179,7 +206,22 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
+                    RelPath = "JoinedDiscWnd.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "JoinedDiscWnd.resx"
+                    DependentUpon = "JoinedDiscWnd.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
                     RelPath = "LeafMessage.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "LilyDb.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -229,6 +271,20 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
+                    RelPath = "MemoDlg.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "MemoDlg.resx"
+                    DependentUpon = "MemoDlg.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "message.ico"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
                     RelPath = "NameSelect.cs"
                     SubType = "Form"
                     BuildAction = "Compile"
@@ -247,6 +303,11 @@
                     RelPath = "PrivateMsg.resx"
                     DependentUpon = "PrivateMsg.cs"
                     BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Util.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
                 />
             </Include>
         </Files>

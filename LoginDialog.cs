@@ -24,7 +24,11 @@ namespace lilySharp
 		private System.Windows.Forms.Button addServerBtn;
 		private System.Windows.Forms.Button connectBtn;
 		private System.Windows.Forms.Button cancelBtn;
-		private System.Windows.Forms.Button button1;
+		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.TextBox blurbField;
+		private bool loginValid = true;
+		private bool blurbValid = true;
+		private System.Windows.Forms.Button removeBtn;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -59,6 +63,7 @@ namespace lilySharp
 		{
 			get{ return (LilyParent)MdiParent; }
 		}
+
 		/// <summary>
 		/// Clean up any resources being used.
 		/// </summary>
@@ -82,11 +87,14 @@ namespace lilySharp
 		private void InitializeComponent()
 		{
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.blurbField = new System.Windows.Forms.TextBox();
+			this.label5 = new System.Windows.Forms.Label();
 			this.passField = new System.Windows.Forms.TextBox();
 			this.nameField = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
 			this.label1 = new System.Windows.Forms.Label();
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
+			this.removeBtn = new System.Windows.Forms.Button();
 			this.addServerBtn = new System.Windows.Forms.Button();
 			this.portField = new System.Windows.Forms.TextBox();
 			this.serverBox = new System.Windows.Forms.ComboBox();
@@ -94,7 +102,6 @@ namespace lilySharp
 			this.label3 = new System.Windows.Forms.Label();
 			this.connectBtn = new System.Windows.Forms.Button();
 			this.cancelBtn = new System.Windows.Forms.Button();
-			this.button1 = new System.Windows.Forms.Button();
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.SuspendLayout();
@@ -102,16 +109,34 @@ namespace lilySharp
 			// groupBox1
 			// 
 			this.groupBox1.Controls.AddRange(new System.Windows.Forms.Control[] {
+																					this.blurbField,
+																					this.label5,
 																					this.passField,
 																					this.nameField,
 																					this.label2,
 																					this.label1});
 			this.groupBox1.Location = new System.Drawing.Point(8, 8);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(232, 96);
+			this.groupBox1.Size = new System.Drawing.Size(232, 120);
 			this.groupBox1.TabIndex = 0;
 			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "User Information";
+			this.groupBox1.Text = "IUser Information";
+			// 
+			// blurbField
+			// 
+			this.blurbField.Location = new System.Drawing.Point(88, 88);
+			this.blurbField.Name = "blurbField";
+			this.blurbField.Size = new System.Drawing.Size(120, 20);
+			this.blurbField.TabIndex = 3;
+			this.blurbField.Text = "";
+			// 
+			// label5
+			// 
+			this.label5.Location = new System.Drawing.Point(16, 88);
+			this.label5.Name = "label5";
+			this.label5.Size = new System.Drawing.Size(72, 23);
+			this.label5.TabIndex = 2;
+			this.label5.Text = "Blurb";
 			// 
 			// passField
 			// 
@@ -149,7 +174,7 @@ namespace lilySharp
 			// groupBox2
 			// 
 			this.groupBox2.Controls.AddRange(new System.Windows.Forms.Control[] {
-																					this.button1,
+																					this.removeBtn,
 																					this.addServerBtn,
 																					this.portField,
 																					this.serverBox,
@@ -161,6 +186,15 @@ namespace lilySharp
 			this.groupBox2.TabIndex = 1;
 			this.groupBox2.TabStop = false;
 			this.groupBox2.Text = "Connect to...";
+			// 
+			// removeBtn
+			// 
+			this.removeBtn.Location = new System.Drawing.Point(208, 64);
+			this.removeBtn.Name = "removeBtn";
+			this.removeBtn.Size = new System.Drawing.Size(96, 23);
+			this.removeBtn.TabIndex = 7;
+			this.removeBtn.Text = "Remove Server";
+			this.removeBtn.Click += new System.EventHandler(this.removeBtn_Click);
 			// 
 			// addServerBtn
 			// 
@@ -218,15 +252,6 @@ namespace lilySharp
 			this.cancelBtn.Text = "Cancel";
 			this.cancelBtn.Click += new System.EventHandler(this.cancelBtn_Click);
 			// 
-			// button1
-			// 
-			this.button1.Location = new System.Drawing.Point(208, 64);
-			this.button1.Name = "button1";
-			this.button1.Size = new System.Drawing.Size(96, 23);
-			this.button1.TabIndex = 7;
-			this.button1.Text = "Remove Server";
-			this.button1.Click += new System.EventHandler(this.button1_Click);
-			// 
 			// LoginDialog
 			// 
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
@@ -279,6 +304,41 @@ namespace lilySharp
 		public string Password
 		{
 			get{ return passField.Text;}
+		}
+
+		/// <summary>
+		/// Allows access to the user's blurb
+		/// </summary>
+		/// <value>Allows access to the user's blurb</value>
+		public string Blurb
+		{
+			get{ return blurbField.Text;}
+		}
+
+		/// <summary>
+		/// Allows access to the flag indicating the username/password are valid
+		/// </summary>
+		/// <remarks>
+		/// If an invalid username/password are given, a seperate dialog is shown to allow the values to
+		///   be re-entered.  We do not want to use the values in this dialog in that case
+		/// </remarks>
+		public bool LoginValid
+		{
+			get{ return loginValid;}
+			set{ loginValid = value;}
+		}
+
+		/// <summary>
+		/// Allows access to the flag indicating the blurb is  valid
+		/// </summary>
+		/// <remarks>
+		/// If an invalid blurb is given, a seperate dialog is shown to allow the blurb to
+		///   be re-entered.  We do not want to use the value in this dialog in that case
+		/// </remarks>
+		public bool BlurbValid
+		{
+			get{ return blurbValid;}
+			set{ blurbValid = value;}
 		}
 
 		/// <summary>
@@ -345,7 +405,12 @@ namespace lilySharp
 			}
 		}
 
-		private void button1_Click(object sender, System.EventArgs e)
+		/// <summary>
+		/// NOT YET IMPLEMENTED: Removes a server from the server list
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
+		private void removeBtn_Click(object sender, System.EventArgs e)
 		{
 			MessageBox.Show("This will be implemented after saving preferences", "Not yet implemented");
 		}

@@ -7,7 +7,7 @@ using System.Windows.Forms;
 namespace lilySharp
 {
 	/// <summary>
-	/// Discussion Joining dialog.
+	/// IDiscussion Joining dialog.
 	/// </summary>
 	public class JoinDiscDlg : System.Windows.Forms.Form
 	{
@@ -38,6 +38,11 @@ namespace lilySharp
 			// TODO: Add any constructor code after InitializeComponent call
 			//
 			this.parent = parent;
+
+			/*
+			 * Populate the ListView
+			 */
+			// Create column headers
 			discList.Columns.Add("Name", -1, HorizontalAlignment.Left);
 			discList.Columns.Add("Title", -1, HorizontalAlignment.Left);
 			discList.Columns.Add("Emote", -2, HorizontalAlignment.Center);
@@ -46,17 +51,18 @@ namespace lilySharp
 			discList.Columns.Add("Memo", -2, HorizontalAlignment.Center);
 			discList.Columns.Add("Invulnerable", -2, HorizontalAlignment.Center);
 			discList.Columns.Add("Moderated", -2, HorizontalAlignment.Center);
-			foreach(DictionaryEntry entry in parent.Handles)
+
+			// Add discussion information
+			foreach(DictionaryEntry entry in parent.Database)
 			{
-				Discussion disc;
+				IDiscussion disc;
 				ListViewItem discRow;
-				if(entry.Value.GetType() == typeof(Discussion) && ((Discussion)entry.Value).Window == null)
+				if(entry.Value.GetType() == typeof(IDiscussion) && ((IDiscussion)entry.Value).Window == null)
 				{
-					disc = (Discussion)entry.Value;
+					disc = (IDiscussion)entry.Value;
 					discRow = new ListViewItem(disc.Name);
 
 					discRow.SubItems.Add(disc.Title);
-
 					discRow.SubItems.Add(asciiCheckbox(!disc.Connect));
 					discRow.SubItems.Add(asciiCheckbox(disc.Private));
 					discRow.SubItems.Add(asciiCheckbox(disc.Info));
@@ -162,7 +168,7 @@ namespace lilySharp
 			this.groupBox1.Size = new System.Drawing.Size(640, 253);
 			this.groupBox1.TabIndex = 6;
 			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "Discussion List";
+			this.groupBox1.Text = "IDiscussion List";
 			// 
 			// JoinDiscDlg
 			// 
@@ -172,7 +178,7 @@ namespace lilySharp
 																		  this.groupBox1,
 																		  this.panel1});
 			this.Name = "JoinDiscDlg";
-			this.Text = "Join Discussion";
+			this.Text = "Join IDiscussion";
 			this.panel1.ResumeLayout(false);
 			this.groupBox1.ResumeLayout(false);
 			this.ResumeLayout(false);
@@ -185,12 +191,12 @@ namespace lilySharp
 		/// Allows access to the discussion the user wants to join
 		/// </summary>
 		/// <value>Allows access to the discussion the user wants to join</value>
-		public Discussion selectedDisc
+		public IDiscussion selectedDisc
 		{
 			get
 			{
 				string discName = discList.SelectedItems[0].SubItems[0].Text;
-				return (Discussion)parent.Handles[parent.getObjectId(discName)];
+				return (IDiscussion)parent.Database[parent.getObjectId(discName)];
 			}
 		}
 
@@ -206,17 +212,32 @@ namespace lilySharp
 				return base.ShowDialog();
 		}
 
+		/// <summary>
+		/// Creates an ASCII checkbox to compensate for the lack of checkboxes in the ListView control
+		/// </summary>
+		/// <param name="term">Indicates if the box is checked</param>
+		/// <returns>an ASCII checkbox</returns>
 		private string asciiCheckbox(bool term)
 		{
 			if(term) return "[X]";
 			else     return "[   ]";
 		}
 
+		/// <summary>
+		/// Allows joining a discussion by double-clicking it in the list
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
 		private void discList_DoubleClick(object sender, System.EventArgs e)
 		{
 			this.DialogResult = DialogResult.OK;
 		}
 
+		/// <summary>
+		/// If a discussion is selected, joins it.
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments</param>
 		private void joinBtn_Click(object sender, System.EventArgs e)
 		{
 			if(discList.SelectedIndices.Count == 0)

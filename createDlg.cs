@@ -148,7 +148,7 @@ namespace lilySharp
 			this.groupBox1.Size = new System.Drawing.Size(200, 112);
 			this.groupBox1.TabIndex = 7;
 			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "Discussion Information";
+			this.groupBox1.Text = "IDiscussion Information";
 			// 
 			// groupBox2
 			// 
@@ -190,7 +190,7 @@ namespace lilySharp
 																		  this.groupBox2,
 																		  this.groupBox1});
 			this.Name = "CreateDlg";
-			this.Text = "Create Discussion";
+			this.Text = "Create IDiscussion";
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox2.ResumeLayout(false);
 			this.ResumeLayout(false);
@@ -207,7 +207,7 @@ namespace lilySharp
 		{
 			if(msg.Response == "")  // Creation was a success
 			{
-				MessageBox.Show("Discussion " + nameField.Text + " has been created", "Create Succeded");
+				MessageBox.Show("IDiscussion " + nameField.Text + " has been created", "Create Succeded");
 				Close();
 			}
 			else

@@ -12,7 +12,7 @@ namespace lilySharp
 	public class PrivateMsg : LilyWindow
 	{
 		
-		private User user;
+		private IUser user;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -21,9 +21,9 @@ namespace lilySharp
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		/// <param name="user">The User we are private messaging with</param>
+		/// <param name="user">The IUser we are private messaging with</param>
 		/// <param name="parent">The parent of the window</param>
-		public PrivateMsg(User user, LilyParent parent) : base(parent)
+		public PrivateMsg(IUser user, LilyParent parent) : base(parent)
 		{
 			//
 			// Required for Windows Form Designer support
@@ -138,6 +138,30 @@ namespace lilySharp
 					break;
 				case "away":
 					post(user.Name + " is now away\n", Color.Maroon);
+					break;
+				case "detach":
+					post(user.Name + " has detached\n", Color.Maroon);
+					break;
+				case "connect":
+					post(user.Name + " has connected\n", Color.Maroon);
+					break;
+				case "here":
+					post(user.Name + " is now hwere\n", Color.Maroon);
+					break;
+				case "attach":
+					post(user.Name + " has attached\n", Color.Maroon);
+					break;
+				case "unidle":
+					post(user.Name + " is no longer idle\n", Color.Maroon);
+					break;
+				case "rename":
+					post(user.Name + " is now known as " + notify.Value + "\n", Color.Maroon);
+					break;
+				case "ignore":
+					if(notify.Value == "")
+						post(user.Name + " is no longer ignoring you\n", Color.Maroon);
+					else
+						post(user.Name + " is ignoring you " + notify.Value.TrimStart(new char[]{'{'}).TrimEnd(new char[]{'}'}) + "\n", Color.Maroon);
 					break;
 				default:
 					break;

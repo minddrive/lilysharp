@@ -119,7 +119,7 @@ namespace lilySharp
 			this.groupBox2.Size = new System.Drawing.Size(264, 112);
 			this.groupBox2.TabIndex = 9;
 			this.groupBox2.TabStop = false;
-			this.groupBox2.Text = "User Information";
+			this.groupBox2.Text = "IUser Information";
 			// 
 			// cancelBtn
 			// 

@@ -13,7 +13,6 @@ namespace lilySharp
 	{
 		private System.Windows.Forms.TextBox blurbBox;
 		private System.Windows.Forms.Button okBtn;
-		private System.Windows.Forms.Button cancelBtn;
 		private System.Windows.Forms.Label label1;
 		/// <summary>
 		/// Required designer variable.
@@ -60,7 +59,6 @@ namespace lilySharp
 		{
 			this.blurbBox = new System.Windows.Forms.TextBox();
 			this.okBtn = new System.Windows.Forms.Button();
-			this.cancelBtn = new System.Windows.Forms.Button();
 			this.label1 = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
@@ -75,18 +73,10 @@ namespace lilySharp
 			// okBtn
 			// 
 			this.okBtn.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.okBtn.Location = new System.Drawing.Point(136, 72);
+			this.okBtn.Location = new System.Drawing.Point(160, 64);
 			this.okBtn.Name = "okBtn";
 			this.okBtn.TabIndex = 1;
 			this.okBtn.Text = "Ok";
-			// 
-			// cancelBtn
-			// 
-			this.cancelBtn.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.cancelBtn.Location = new System.Drawing.Point(32, 72);
-			this.cancelBtn.Name = "cancelBtn";
-			this.cancelBtn.TabIndex = 2;
-			this.cancelBtn.Text = "Cancel";
 			// 
 			// label1
 			// 
@@ -98,10 +88,9 @@ namespace lilySharp
 			// BlurbDlg
 			// 
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-			this.ClientSize = new System.Drawing.Size(240, 109);
+			this.ClientSize = new System.Drawing.Size(240, 101);
 			this.Controls.AddRange(new System.Windows.Forms.Control[] {
 																		  this.label1,
-																		  this.cancelBtn,
 																		  this.okBtn,
 																		  this.blurbBox});
 			this.Name = "BlurbDlg";

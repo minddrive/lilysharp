@@ -7,7 +7,7 @@ using System.Windows.Forms;
 namespace lilySharp
 {
 	/// <summary>
-	/// Summary description for AddServer.
+	/// Allows a user to add a server to the server list
 	/// </summary>
 	public class AddServerDlg : System.Windows.Forms.Form
 	{
@@ -108,11 +108,20 @@ namespace lilySharp
 		}
 		#endregion
 
+		/// <summary>
+		/// Allows access to the server's address
+		/// </summary>
+		/// <value>Allows access to the server's address</value>
 		public string Server
 		{
 			get{ return nameField.Text;}
 		}
 
+		/// <summary>
+		/// If there is an address entered into the text box, add the server to the server list
+		/// </summary>
+		/// <param name="sender">Sender of the event</param>
+		/// <param name="e">Event arguments<param>
 		private void addBtn_Click(object sender, System.EventArgs e)
 		{
 			if(nameField.Text.Trim() == "")

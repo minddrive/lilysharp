@@ -12,11 +12,16 @@ namespace lilySharp
 				eventStr,
 				valueStr;
 		
-		private LilyItem source;
+		private ILilyObject source;
 
-		private LilyItem[] recipients;
+		private ILilyObject[] recipients;
 
-		private DateTime       time;
+		private DateTime time;
+
+		private bool notify,
+			         bell,
+			         stamp,
+			         empty;
 
 		/// <summary>
 		/// Allows access to the command ID of the event
@@ -32,7 +37,7 @@ namespace lilySharp
 		/// Allows access to the source of the event
 		/// </summary>
 		/// <value>Allows access to the source of the event</value>
-		public LilyItem Source
+		public ILilyObject Source
 		{
 			get { return source; }
 		}
@@ -59,7 +64,7 @@ namespace lilySharp
 		/// Allows access to the recipient list
 		/// </summary>
 		/// <value>Allows access to the recipient list</value>
-		public LilyItem[] Recipients
+		public ILilyObject[] Recipients
 		{
 			get { return recipients; }
 		}
@@ -73,39 +78,51 @@ namespace lilySharp
 			get { return time; }
 		}
 
-
-
-		/// <summary>
-		/// Constructor
-		/// </summary>
-		/// <param name="eventString">The notify event from the server</param>
-		/// <param name="handles">The Client's database</param>
-		public NotifyEvent(string eventString, Hashtable handles)
+		public bool Notify
 		{
-			source = ((LilyItem)handles[ LilyParent.Parse(eventString, "SOURCE" )] );
-			command = LilyParent.Parse(eventString, "COMMAND");
-			eventStr = LilyParent.Parse(eventString, "EVENT");
-			valueStr = LilyParent.Parse(eventString, "VALUE");
+			get{ return notify;}
+		}
+
+		public bool Stamp
+		{
+			get{ return stamp;}
+		}
+
+		public bool Bell
+		{
+			get { return bell;}
+		}
+
+		public bool Empty
+		{
+			get{ return empty;}
+		}
+
+		public NotifyEvent(Hashtable attributes, ILilyDb database)
+		{
+			source = database[ attributes["SOURCE"] ];
+			eventStr = attributes["EVENT"] as string;
+
+			command = attributes["COMMAND"] == null ? "" : attributes["COMMAND"] as string;
+			notify  = attributes["NOTIFY"]  == null ? false : true;
+			bell    = attributes["BELL"]    == null ? false : true;
+			stamp   = attributes["STAMP"]   == null ? false : true;
+			empty   = attributes["EMPTY"]   == null ? false : true;
 			
-			string recipList = LilyParent.Parse(eventString, "RECIPS");
-			if(recipList != "")
+			valueStr = empty ? "" : attributes["VALUE"] as string;
+
+			if(attributes["RECIPS"] != null)
 			{
-				string[] recipHandles = recipList.Split(new char[] {','});
-				recipients = new LilyItem[ recipHandles.Length];
+				string[] recipHandles = ((string)attributes["RECIPS"]).Split(new char[] {','});
+				recipients = new ILilyObject[ recipHandles.Length];
 
 				for(int i = 0; i < recipients.Length; i++)
 				{
-					recipients[i] = ((LilyItem)handles[ recipHandles[i] ]);
+					recipients[i] = ((ILilyObject)database[ recipHandles[i] ]);
 				}
 			}
 			
-			/*
-			 * The server privides UNIX time, so we need to convert this into .NET time
-			 *   We multiply by 10^7 because unix time is in seconds, and .NET time is in 100 nanoseconds
-			 */
-            time = new DateTime(1970, 1, 1);
-			time += new TimeSpan( long.Parse(LilyParent.Parse(eventString, "TIME")) * 10000000 );
-			time += TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);  // Convert from GMT to client time
+			time = Util.ConvertFromUnixTime(attributes["TIME"] as string);
 		}
 	}
 }

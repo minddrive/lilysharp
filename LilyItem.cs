@@ -1,18 +1,22 @@
+using System;
+using System.Collections;
+using System.Windows.Forms;
+
 namespace lilySharp
 {
 
 	/// <summary>
-	/// The base class for User/Discussion classes
+	/// The base class for IUser/IDiscussion classes
 	/// </summary>
-	public abstract class LilyItem
+	public abstract class LilyObject : IComparable, ILilyObject
 	{
 		protected LilyWindow window;
 		protected string name, handle;
 
 		/// <summary>
-		/// Allows access to the User/Discussion name
+		/// Allows access to the IUser/IDiscussion name
 		/// </summary>
-		/// <value>Allows access to the User/Discussion name</value>
+		/// <value>Allows access to the IUser/IDiscussion name</value>
 		public string Name
 		{
 			get	{ return name;}
@@ -20,18 +24,18 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Allows access to the User/Discussion object ID
+		/// Allows access to the IUser/IDiscussion object ID
 		/// </summary>
-		/// <value>Allows access to the User/Discussion object ID</value>
+		/// <value>Allows access to the IUser/IDiscussion object ID</value>
 		public string Handle
 		{
 			get { return handle; }
 		}
 
 		/// <summary>
-		/// Allows access to the User/Discussion window
+		/// Allows access to the IUser/IDiscussion window
 		/// </summary>
-		/// <value>Allows access to the User/Discussion window</value>
+		/// <value>Allows access to the IUser/IDiscussion window</value>
         public LilyWindow Window
 		{
 			get { return window;}
@@ -39,16 +43,16 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Returns the name of the User/Discussion
+		/// Returns the name of the IUser/IDiscussion
 		/// </summary>
-		/// <returns>The User/Discussion's name</returns>
+		/// <returns>The IUser/IDiscussion's name</returns>
 		public override string ToString()
 		{
 			return name;
 		}
 
 		/// <summary>
-		/// Compairs two User/Discussion's object IDs to determine if they are equal
+		/// Compairs two IUser/IDiscussion's object IDs to determine if they are equal
 		/// </summary>
 		/// <param name="lhs">The left hand operand</param>
 		/// <param name="rhs">The right hand operand</param>
@@ -56,7 +60,7 @@ namespace lilySharp
 		/// <remarks>
 		/// Need to do some crazy tricks to compensate for null values =(
 		/// </remarks>
-		public static bool operator==(LilyItem lhs, LilyItem rhs)
+		public static bool operator==(LilyObject lhs, LilyObject rhs)
 		{
 			try
 			{
@@ -76,12 +80,12 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Compairs two User/Discussion's object IDs to determine if they are not equal
+		/// Compairs two IUser/IDiscussion's object IDs to determine if they are not equal
 		/// </summary>
 		/// <param name="lhs">Left hand operand</param>
 		/// <param name="rhs">Right hand operand</param>
 		/// <returns>True of the oIDs are not equal, false otherwise</returns>
-		public static bool operator!=(LilyItem lhs, LilyItem rhs)
+		public static bool operator!=(LilyObject lhs, LilyObject rhs)
 		{
 			return !(lhs == rhs);
 		}
@@ -91,122 +95,129 @@ namespace lilySharp
 		/// Compairs this with another object to see if they are equal
 		/// </summary>
 		/// <param name="o">Object to compair this to</param>
-		/// <returns>True if the object is a LilyItem and it's oID matches this one, false otherwise</returns>
+		/// <returns>True if the object is a ILilyObject and it's oID matches this one, false otherwise</returns>
 		public override bool Equals(object o)
 		{
 			if(o == null || o.GetType() != GetType())
 				return false;
 
-			return ((LilyItem)o).handle == this.handle;
+			return ((ILilyObject)o).Handle == this.handle;
 		}
 		
 		/// <summary>
-		/// Returns this User/Discussion's object ID in numeric form as this item's hashcode
+		/// Returns this IUser/IDiscussion's object ID in numeric form as this item's hashcode
 		/// </summary>
-		/// <returns>The numerical representation of this User/Discussion's oID</returns>
+		/// <returns>The numerical representation of this IUser/IDiscussion's oID</returns>
 		public override int GetHashCode()
 		{
 			string str = handle.Substring(1,handle.Length - 1);
 			return int.Parse(str);
 		}
 
+		public int CompareTo(object obj)
+		{
+			if(obj == null) return -1;
+
+			if(!(obj.GetType() == this.GetType()))
+				throw new ArgumentException("Agument is not of type ILilyObject");
+
+			return string.Compare(this.ToString(), obj.ToString());
+		}
 	}
 
 	
 	/// <summary>
 	/// Holds the data for a discussion
 	/// </summary>
-	public class Discussion : LilyItem
+	public class Discussion : LilyObject, IDiscussion
 	{
-		private string title;
+		private string title, game;
 		private bool priv,
 			connect,
 			inv,
 			moderated,
 			info,
 			memo;
+		private DateTime created,
+			             lastInput;
 
-		/// <summary>
-		/// Constructor
-		/// </summary>
-		/// <param name="desc">The %disc line from the server</param>
-		public Discussion(string desc)
+		public Discussion(Hashtable attributes)
 		{
-			this.handle = LilyParent.Parse(desc, "HANDLE");
+			handle = attributes["HANDLE"] as string;
+			name = attributes["NAME"] as string;
+			title = attributes["TITLE"] as string;
+            if(attributes["GAME"] != null) game = attributes["GAME"] as string;		
+            created = Util.ConvertFromUnixTime(attributes["CREATION"] as string);
+			lastInput = Util.ConvertFromUnixTime(attributes["INPUT"] as string);
 
-			/*
-			 * Parse the description
-			 */
-			// Name
-			name = LilyParent.Parse(desc, "NAME");
-
-			// TITLE
-			title = LilyParent.Parse(desc, "TITLE");
-
-			// Attributes
-			int index = desc.ToUpper().IndexOf("ATTRIB");
-			priv      = (desc.IndexOf("private", index)   == -1) ? false : true;
-			connect   = (desc.IndexOf("connect", index)   == -1) ? false : true;
-			inv       = (desc.IndexOf("inv", index)       == -1) ? false : true;
-			moderated = (desc.IndexOf("moderated", index) == -1) ? false : true;
-			info      = (desc.IndexOf("info", index)      == -1) ? false : true;
-			memo      = (desc.IndexOf("info", index)      == -1) ? false : true;
+			priv      = ((string)attributes["ATTRIB"]).IndexOf("private") == -1 ? false : true;
+			connect   = ((string)attributes["ATTRIB"]).IndexOf("connect") == -1 ? false : true;
+			inv       = ((string)attributes["ATTRIB"]).IndexOf("inv") == -1 ? false : true;
+			moderated = ((string)attributes["ATTRIB"]).IndexOf("moderated") == -1 ? false : true;
+			info      = ((string)attributes["ATTRIB"]).IndexOf("info") == -1 ? false : true;
+			memo      = ((string)attributes["ATTRIB"]).IndexOf("memo") == -1 ? false : true;
 		}
+
 		#region Properties
 
 		/// <summary>
-		/// Allows access to this Discussion's private flag
+		/// Allows access to this IDiscussion's private flag
 		/// </summary>
-		/// <value>Allows access to this Discussion's private flag</value>
+		/// <value>Allows access to this IDiscussion's private flag</value>
 		public bool Private
 		{
 			get { return priv; }
+			set { priv = value;}
 		}
 
 		/// <summary>
-		/// Allows access to this Discussion's connect flag
+		/// Allows access to this IDiscussion's connect flag
 		/// </summary>
-		/// <value>Allows access to this Discussion's connect flag</value>
+		/// <value>Allows access to this IDiscussion's connect flag</value>
 		public bool Connect
 		{
 			get	{ return connect; }
 		}
 
 		/// <summary>
-		/// Allows access to this Discussion's invulnerable flag
+		/// Allows access to this IDiscussion's invulnerable flag
 		/// </summary>
-		/// <value>Allows access to this Discussion's invulnerable flag</value>
+		/// <value>Allows access to this IDiscussion's invulnerable flag</value>
 		public bool Invulnerable
 		{
 			get	{ return inv; }
+			set { inv = value;}
 		}
 
 		/// <summary>
-		/// Allows access to this Discussion's info flag
+		/// Allows access to this IDiscussion's info flag
 		/// </summary>
-		/// <value>Allows access to this Discussion's info flag</value>
+		/// <value>Allows access to this IDiscussion's info flag</value>
 		public bool Info
 		{
 			get { return info; }
+			set { info = value;}
 		}
 
 		/// <summary>
-		/// Allows access to this Discussion's memo flag
+		/// Allows access to this IDiscussion's memo flag
 		/// </summary>
-		/// <value>Allows access to this Discussion's memo flag</value>
+		/// <value>Allows access to this IDiscussion's memo flag</value>
 		public bool Memo
 		{
 			get	{ return memo;}
+			set { memo = value;}
 		}
 
 		public bool Moderated
 		{
 			get { return moderated;}
+			set { moderated = value;}
 		}
 		/// <summary>
-		/// Allows access to this Discussion's title
+		/// Allows access to this IDiscussion's title
 		/// </summary>
-		/// <value>Allows access to this Discussion's title</value>
+		/// <value>Allows access to this IDiscussion's title</value>
 		public string Title
 		{
 			get { return title; }
@@ -220,62 +231,73 @@ namespace lilySharp
 	/// <summary>
 	/// Holds the data for a user
 	/// </summary>
-	public class User : LilyItem
+	public class User : LilyObject, IUser
 	{
 		private string blurb,
 			           pronoun;
-		private bool finger,
-					 info,
-				     memo;
 
+		private bool finger = false,
+					 info = false,
+				     memo = false;
+
+		private DateTime login,
+			             lastInput;
 		private States state;
 
-		public enum States {Here, Away, Detached, None}
-
-		/// <summary>
-		/// Constructor
-		/// </summary>
-		/// <param name="desc">The %user line from the server</param>
-		public User(string desc)
+		public User(Hashtable attributes)
 		{
-			this.handle  = LilyParent.Parse(desc, "HANDLE");
-			name    = LilyParent.Parse(desc, "NAME");
-			blurb   = LilyParent.Parse(desc, "BLURB");
-			pronoun = LilyParent.Parse(desc, "PRONOUN");
-			setState(desc);
+			handle    = attributes["HANDLE"] as string;
+			name      = attributes["NAME"] as string;
+			blurb     = attributes["BLURB"]   == null ? "" : attributes["BLURB"] as string;
+			pronoun   = attributes["PRONOUN"] == null ? "" : attributes["PRONOUN"] as string;
+			login     = attributes["LOGIN"]   == null ? DateTime.Now : Util.ConvertFromUnixTime(attributes["LOGIN"] as string);
+			lastInput = attributes["INPUT"]   == null ? DateTime.Now : Util.ConvertFromUnixTime(attributes["INPUT"] as string);
 
-			int index = desc.ToUpper().IndexOf("ATTRIB");
-			if(index == -1) index = desc.Length;
-			finger = (desc.IndexOf("finger", index) == -1) ? false : true;
-			info   = (desc.IndexOf("info", index)   == -1) ? false : true;
-			memo   = (desc.IndexOf("memo", index)   == -1) ? false : true;
-
-		}
-
-		/// <summary>
-		/// Sets the initial state of the user
-		/// </summary>
-		/// <param name="desc">The %user line from the server</param>
-		private void setState(string desc)
-		{
-			string attribs = LilyParent.Parse(desc, "STATE");
-			if(attribs.IndexOf("here") != -1)
+			// Determine state
+			switch(attributes["STATE"] as string)
+			{
+				case "here":
 					state = States.Here;
-			else if(attribs.IndexOf("away") != -1)
+					break;
+				case "away":
 					state = States.Away;
-			else if(attribs.IndexOf("detach") != -1)
-				state = States.Detached;
-			else
-				state = States.None;
+					break;
+				case "detach":
+					state = States.Detached;
+					break;
+				default:
+					state = States.Disconnected;
+					break;
+			}
+			
+			// Determine attributes
+			if(attributes["ATTRIB"] != null)
+			{
+				foreach(string attrib in ((string)attributes["ATTRIB"]).Split(new char[]{','}))
+				{
+					switch(attrib)
+					{
+						case "finger":
+							finger = true;
+							break;
+						case "info":
+							info = true;
+							break;
+						case "memo":
+							memo = true;
+							break;
+					} // end case
+				} // end foreach
+			} // end if
 
 		}
 
 		#region Properties
 
 		/// <summary>
-		/// Allows access to the User's blurb
+		/// Allows access to the IUser's blurb
 		/// </summary>
-		/// <value>Allows access to the User's blurb</value>
+		/// <value>Allows access to the IUser's blurb</value>
 		public string Blurb
 		{
 			get { return blurb;}
@@ -283,9 +305,9 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Allows access to the User's pronoun
+		/// Allows access to the IUser's pronoun
 		/// </summary>
-		/// <value>Allows access to the User's pronoun</value>
+		/// <value>Allows access to the IUser's pronoun</value>
 		public string Pronoun
 		{
 			get { return pronoun; }
@@ -293,9 +315,9 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Allows access to the User's state
+		/// Allows access to the IUser's state
 		/// </summary>
-		/// <value>Allows access to the User's state</value>
+		/// <value>Allows access to the IUser's state</value>
 		public States State
 		{
 			get { return state; }
@@ -303,9 +325,9 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Allows access to the User's finger flag
+		/// Allows access to the IUser's finger flag
 		/// </summary>
-		/// <value>Allows access to the User's finger flag</value>
+		/// <value>Allows access to the IUser's finger flag</value>
 		public bool Finger
 		{
 			get { return finger; }
@@ -313,9 +335,9 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Allows access to the User's info flag
+		/// Allows access to the IUser's info flag
 		/// </summary>
-		/// <value>Allows access to the User's info flag</value>
+		/// <value>Allows access to the IUser's info flag</value>
 		public bool Info
 		{
 			get { return info;}
@@ -323,9 +345,9 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Allows access to the User's memo flag
+		/// Allows access to the IUser's memo flag
 		/// </summary>
-		/// <value>Allows access to the User's memo flag</value>
+		/// <value>Allows access to the IUser's memo flag</value>
 		public bool Memo
 		{
 			get { return memo;}
