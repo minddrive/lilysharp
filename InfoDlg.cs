@@ -15,12 +15,13 @@ namespace lilySharp
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.Button closeBtn;
 		private System.Windows.Forms.RichTextBox infoBox;
+		private ILilyObject source;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
 		private System.ComponentModel.Container components = null;
 
-		public InfoDlg(LilyParent parent, ILilyObject infoSource)
+		public InfoDlg(ILilyObject infoSource)
 		{
 			//
 			// Required for Windows Form Designer support
@@ -31,8 +32,9 @@ namespace lilySharp
 			// TODO: Add any constructor code after InitializeComponent call
 			//
 			this.Text = infoSource.Name + "'s info";
-			LeafMessage msg = new LeafMessage("/info \"" + infoSource.Name + "\"",  new ProcessResponse(this.ProcessResponse));
-			parent.PostMessage(msg);
+			source = infoSource;
+			//LeafMessage msg = new LeafMessage("/info \"" + infoSource.Name + "\"",  new ProcessResponse(this.ProcessResponse));
+			//parent.PostMessage(new LeafMessage("/info \"" + infoSource.Name + "\"",  new ProcessResponse(this.ProcessResponse)););
 		}
 
 		/// <summary>
@@ -102,6 +104,7 @@ namespace lilySharp
 																		  this.panel1});
 			this.Name = "InfoDlg";
 			this.Text = "InfoDlg";
+			this.Load += new System.EventHandler(this.InfoDlg_Load);
 			this.panel1.ResumeLayout(false);
 			this.ResumeLayout(false);
 
@@ -144,6 +147,11 @@ namespace lilySharp
 			{
 				MessageBox.Show("Error Starting process " + e.LinkText);
 			}
+		}
+
+		private void InfoDlg_Load(object sender, System.EventArgs e)
+		{
+			Sock.Instance.PostMessage(new LeafMessage("/info \"" + source.Name + "\"",  new ProcessResponse(this.ProcessResponse)));
 		}
 	}
 }

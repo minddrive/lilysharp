@@ -22,16 +22,13 @@ namespace lilySharp
 		/// </summary>
 		/// <param name="user">The IUser we are private messaging with</param>
 		/// <param name="parent">The parent of the window</param>
-		public PrivateMsg(IUser user, LilyParent parent) : base(parent)
+		public PrivateMsg(IUser user) : base()
 		{
 			//
 			// Required for Windows Form Designer support
 			//
 			InitializeComponent();
 
-			//
-			// TODO: Add any constructor code after InitializeComponent call
-			//
 			this.AcceptButton = sendBtn;
 			this.lilyObject = user;
 			prefix = '~';

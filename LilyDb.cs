@@ -21,6 +21,12 @@ namespace lilySharp
 			set;
 		}
 
+		IUser Me
+		{
+			get;
+			set;
+		}
+
 		void Clear();
 		void Remove(string tag);
 		ILilyObject GetByName(string oID);
@@ -140,7 +146,7 @@ namespace lilySharp
 
 	}
 
-	public class Ignore
+	public class Ignore: ICloneable
 	{
 		public bool Public,
 			        Private;
@@ -157,6 +163,20 @@ namespace lilySharp
 			Public = pub;
 			Private = priv;
 			Exceptions = new ArrayList();
+		}
+
+		public bool Empty
+		{
+			get{ return !(Public || Private || Exceptions.Count > 0);}
+		}
+
+		public object Clone()
+		{
+			Ignore newIgnore = new Ignore(Public, Private);
+			if(Exceptions != null)
+				newIgnore.Exceptions = Exceptions.Clone() as ArrayList;
+
+			return newIgnore;
 		}
 	}
 }

@@ -22,7 +22,6 @@ namespace lilySharp
 		private System.Windows.Forms.GroupBox groupBox2;
 		private System.Windows.Forms.Button createBtn;
 		private System.Windows.Forms.Button cancelBtn;
-		private LilyParent parent;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -32,7 +31,7 @@ namespace lilySharp
 		/// Constructor
 		/// </summary>
 		/// <param name="parent">This dialog's parent</param>
-		public CreateDlg(LilyParent parent)
+		public CreateDlg()
 		{
 			//
 			// Required for Windows Form Designer support
@@ -42,7 +41,6 @@ namespace lilySharp
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
-			this.parent = parent;
 			this.AcceptButton = createBtn;
 		}
 
@@ -260,7 +258,8 @@ namespace lilySharp
 
 			createStr = createStr.TrimEnd(new char[] {','}); //Trim a trailing comma if the disc isn't moderated, but is emote or private
 			LeafMessage msg = new LeafMessage(createStr, new ProcessResponse(this.ProcessResponse));
-			parent.PostMessage(msg);
+			//parent.PostMessage(msg);
+			Sock.Instance.PostMessage(msg);
 		}
 	
 	}

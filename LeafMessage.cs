@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Forms;
 
 namespace lilySharp
 {
@@ -11,6 +12,7 @@ namespace lilySharp
 		private String command, response = "", tag = "";
 		private int commandID;
 		private ProcessResponse respond;
+		private bool cancelled = false;
 
 		/// <summary>
 		/// Constructor
@@ -80,7 +82,12 @@ namespace lilySharp
 		/// </summary>
 		public void End()
 		{
-			respond(this);
+			if(!cancelled) respond(this);
+		}
+	
+		public void Cancell()
+		{
+			cancelled = true;
 		}
 	}
 }

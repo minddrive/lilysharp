@@ -18,7 +18,6 @@ namespace lilySharp
 		private System.Windows.Forms.RichTextBox memoBox;
 		private System.Windows.Forms.Button closeBtn;
 		private System.Windows.Forms.ComboBox memoList;
-		private LilyParent parent;
 		private ILilyObject   source;
 		private System.Windows.Forms.Label dateLable;
 		/// <summary>
@@ -31,7 +30,7 @@ namespace lilySharp
 		/// </summary>
 		/// <param name="parent">This window's parent</param>
 		/// <param name="source">The user/discussion whos memos are being displayed</param>
-		public MemoDlg(LilyParent parent, ILilyObject source)
+		public MemoDlg(ILilyObject source)
 		{
 			//
 			// Required for Windows Form Designer support
@@ -41,12 +40,11 @@ namespace lilySharp
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
-			this.parent = parent;
 			this.source = source;
 			this.Text = source.Name + "'s Memos";
 
-			LeafMessage msg = new LeafMessage("/memo " + source.Name.Replace(' ','_'), "list",  new ProcessResponse(this.ProcessResponse));
-			parent.PostMessage(msg);
+			//LeafMessage msg = new LeafMessage("/memo " + source.Name.Replace(' ','_'), "list",  new ProcessResponse(this.ProcessResponse));
+			//parent.PostMessage(new LeafMessage("/memo " + source.Name.Replace(' ','_'), "list",  new ProcessResponse(this.ProcessResponse)););
 
 		}
 
@@ -75,9 +73,9 @@ namespace lilySharp
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.closeBtn = new System.Windows.Forms.Button();
 			this.panel2 = new System.Windows.Forms.Panel();
+			this.dateLable = new System.Windows.Forms.Label();
 			this.memoList = new System.Windows.Forms.ComboBox();
 			this.memoBox = new System.Windows.Forms.RichTextBox();
-			this.dateLable = new System.Windows.Forms.Label();
 			this.panel1.SuspendLayout();
 			this.panel2.SuspendLayout();
 			this.SuspendLayout();
@@ -112,6 +110,16 @@ namespace lilySharp
 			this.panel2.Size = new System.Drawing.Size(384, 40);
 			this.panel2.TabIndex = 1;
 			// 
+			// dateLable
+			// 
+			this.dateLable.Dock = System.Windows.Forms.DockStyle.Right;
+			this.dateLable.Location = new System.Drawing.Point(184, 0);
+			this.dateLable.Name = "dateLable";
+			this.dateLable.Size = new System.Drawing.Size(200, 40);
+			this.dateLable.TabIndex = 1;
+			this.dateLable.Text = "Date:";
+			this.dateLable.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			// 
 			// memoList
 			// 
 			this.memoList.Location = new System.Drawing.Point(0, 8);
@@ -131,16 +139,6 @@ namespace lilySharp
 			this.memoBox.Text = "Retrieving memo...";
 			this.memoBox.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.memoBox_LinkClicked);
 			// 
-			// dateLable
-			// 
-			this.dateLable.Dock = System.Windows.Forms.DockStyle.Right;
-			this.dateLable.Location = new System.Drawing.Point(184, 0);
-			this.dateLable.Name = "dateLable";
-			this.dateLable.Size = new System.Drawing.Size(200, 40);
-			this.dateLable.TabIndex = 1;
-			this.dateLable.Text = "Date:";
-			this.dateLable.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
 			// MemoDlg
 			// 
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
@@ -151,6 +149,7 @@ namespace lilySharp
 																		  this.panel1});
 			this.Name = "MemoDlg";
 			this.Text = "MemoDlg";
+			this.Load += new System.EventHandler(this.MemoDlg_Load);
 			this.panel1.ResumeLayout(false);
 			this.panel2.ResumeLayout(false);
 			this.ResumeLayout(false);
@@ -216,8 +215,8 @@ namespace lilySharp
 		private void memoList_SelectedIndexChanged(object sender, System.EventArgs e)
 		{
 			this.dateLable.Text = "Date: " + ((Memo)memoList.SelectedItem).GetDate();
-			LeafMessage msg = new LeafMessage("/memo " + source.Name.Replace(' ', '_') + " \"" + memoList.SelectedItem + "\"", "memo",  new ProcessResponse(this.ProcessResponse));
-			parent.PostMessage(msg);
+			//LeafMessage msg = new LeafMessage("/memo " + source.Name.Replace(' ', '_') + " \"" + memoList.SelectedItem + "\"", "memo",  new ProcessResponse(this.ProcessResponse));
+			Sock.Instance.PostMessage(new LeafMessage("/memo " + source.Name.Replace(' ', '_') + " \"" + memoList.SelectedItem + "\"", "memo",  new ProcessResponse(this.ProcessResponse)));
 			memoBox.Text = "Retrieving memo...";
 		}
 
@@ -248,6 +247,11 @@ namespace lilySharp
 			{
 				MessageBox.Show("Error Starting process " + e.LinkText);
 			}
+		}
+
+		private void MemoDlg_Load(object sender, System.EventArgs e)
+		{
+			Sock.Instance.PostMessage(new LeafMessage("/memo " + source.Name.Replace(' ','_'), "list",  new ProcessResponse(this.ProcessResponse)));
 		}
 	}
 

@@ -42,6 +42,8 @@ namespace lilySharp
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
+			Sock.Instance.LineRecieved += new SockEventHandler(LineRecieved);
+
 			lineCount = 0;
 			maxLines = 1000;
 		}
@@ -103,8 +105,6 @@ namespace lilySharp
 			// 
 			// otherBox
 			// 
-			this.otherBox.Checked = true;
-			this.otherBox.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.otherBox.Location = new System.Drawing.Point(280, 40);
 			this.otherBox.Name = "otherBox";
 			this.otherBox.TabIndex = 7;
@@ -112,8 +112,6 @@ namespace lilySharp
 			// 
 			// waterBox
 			// 
-			this.waterBox.Checked = true;
-			this.waterBox.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.waterBox.Location = new System.Drawing.Point(280, 8);
 			this.waterBox.Name = "waterBox";
 			this.waterBox.Size = new System.Drawing.Size(112, 24);
@@ -122,8 +120,6 @@ namespace lilySharp
 			// 
 			// commandBox
 			// 
-			this.commandBox.Checked = true;
-			this.commandBox.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.commandBox.Location = new System.Drawing.Point(192, 40);
 			this.commandBox.Name = "commandBox";
 			this.commandBox.Size = new System.Drawing.Size(80, 24);
@@ -132,8 +128,6 @@ namespace lilySharp
 			// 
 			// notifyBox
 			// 
-			this.notifyBox.Checked = true;
-			this.notifyBox.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.notifyBox.Location = new System.Drawing.Point(192, 8);
 			this.notifyBox.Name = "notifyBox";
 			this.notifyBox.Size = new System.Drawing.Size(80, 24);
@@ -142,8 +136,6 @@ namespace lilySharp
 			// 
 			// groupBox
 			// 
-			this.groupBox.Checked = true;
-			this.groupBox.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.groupBox.Location = new System.Drawing.Point(96, 40);
 			this.groupBox.Name = "groupBox";
 			this.groupBox.Size = new System.Drawing.Size(80, 24);
@@ -152,8 +144,6 @@ namespace lilySharp
 			// 
 			// dataBox
 			// 
-			this.dataBox.Checked = true;
-			this.dataBox.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.dataBox.Location = new System.Drawing.Point(96, 8);
 			this.dataBox.Name = "dataBox";
 			this.dataBox.Size = new System.Drawing.Size(80, 24);
@@ -162,8 +152,6 @@ namespace lilySharp
 			// 
 			// discBox
 			// 
-			this.discBox.Checked = true;
-			this.discBox.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.discBox.Location = new System.Drawing.Point(8, 40);
 			this.discBox.Name = "discBox";
 			this.discBox.Size = new System.Drawing.Size(72, 24);
@@ -172,8 +160,6 @@ namespace lilySharp
 			// 
 			// userBox
 			// 
-			this.userBox.Checked = true;
-			this.userBox.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.userBox.Location = new System.Drawing.Point(8, 8);
 			this.userBox.Name = "userBox";
 			this.userBox.Size = new System.Drawing.Size(72, 24);
@@ -227,18 +213,20 @@ namespace lilySharp
 		#endregion
 	
 		
-		public void Post(string msg)
+		private void LineRecieved(object sender, SockEventArgs e)
 		{
-			int typeEnd = msg.IndexOf(' ');
+			if(InvokeRequired) Invoke(new SockEventHandler(LineRecieved), new Object[]{sender, e});
+
+			int typeEnd = e.Line.IndexOf(' ');
 			string msgType;
 
 			if(typeEnd == -1)
 			{
-				if(otherBox.Checked) msgArea.AppendText(msg);
+				if(otherBox.Checked) msgArea.AppendText(e.Line);
 				return;
 			}
 			else
-				msgType = msg.Substring(0, typeEnd);
+				msgType = e.Line.Substring(0, typeEnd);
 
 			switch (msgType)
 			{
@@ -270,12 +258,16 @@ namespace lilySharp
 					break;
 			}
 
+			/*
 			if(lineCount < maxLines && maxLines > 0)
 				lineCount++;
 			else
-				msgArea.Text = msgArea.Text.Substring(msgArea.Text.IndexOf("\n") + 1);
-					
-			msgArea.AppendText(msg + '\n');
+				msgArea.Text = msgArea.Text.Remove(0, msgArea.Text.IndexOf("\n") +1);
+			*/
+			
+			
+
+			msgArea.AppendText(e.Line + '\n');
 		}
 
 		private void DiagConsole_Closing(object sender, System.ComponentModel.CancelEventArgs e)

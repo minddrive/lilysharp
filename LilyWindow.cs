@@ -24,8 +24,8 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem scrollLockItem;
 		protected bool allowClose;
 		protected ILilyObject lilyObject;
-		protected LilyParent mdiParent;
 		protected char prefix;
+		protected LilyParent mainWindow;
 		private System.Windows.Forms.MenuItem menuItem1;
 		private System.Windows.Forms.MenuItem copyItem;
 
@@ -92,33 +92,11 @@ namespace lilySharp
 			// Required for Windows Form Designer support
 			//
 			InitializeComponent();
-			//
-			// TODO: Add any constructor code after InitializeComponent call
-			//
+	
 			this.AcceptButton = sendBtn;
+			if(this.GetType() == typeof(LilyWindow)) Sock.Instance.NewInfo += new SockEventHandler(sock_NewInfo);
 		}
 
-		/// <summary>
-		/// Initialize the form, and subscribe to the updateIUser event
-		/// </summary>
-		/// <param name="parent">This window's parent</param>
-		public LilyWindow(LilyParent parent)
-		{
-			//
-			// Required for Windows Form Designer support
-			//
-			InitializeComponent();
-
-			//
-			// TODO: Add any constructor code after InitializeComponent call
-			//
-			this.AcceptButton = sendBtn;
-			this.MdiParent = parent;
-			this.mdiParent = parent;
-
-			parent.UpdateUser += new LilyParent.onNotifyDelegate(onNotify);
-			parent.MdiChildActivate += new EventHandler(this.LilyWindow_Activated);
-		}
 
 		/// <summary> 
 		/// Clean up any resources being used.
@@ -133,7 +111,8 @@ namespace lilySharp
 				}
 			}
 			((LilyParent)MdiParent).UpdateUser -= new LilyParent.onNotifyDelegate(this.onNotify);
-			ParentForm.MdiChildActivate -= new EventHandler(this.LilyWindow_Activated);
+			// TODO: Fix NullReference Exception here
+			//ParentForm.MdiChildActivate -= new EventHandler(this.LilyWindow_Activated);
 			base.Dispose( disposing );
 		}
 
@@ -268,12 +247,13 @@ namespace lilySharp
 			this.Name = "LilyWindow";
 			this.Text = "Console";
 			this.Closing += new System.ComponentModel.CancelEventHandler(this.window_Closing);
+			this.Load += new System.EventHandler(this.LilyWindow_Load);
 			this.panel1.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
 		#endregion
-	
+
 		/// <summary>
 		/// Allows access to the variable that determines if the window can close
 		/// </summary>
@@ -283,25 +263,33 @@ namespace lilySharp
 			set{ allowClose = value;}
 		}
 
-		
+		/*
+		public override LilyParent MdiParent
+		{
+			//get { return new LilyParent();}
+			//get {return Parent.FindForm() as LilyParent;}
+		}*/
+
 		protected void ignoreResponse(LeafMessage msg)
 		{
 			post("*** " + msg.Response, Color.DarkGreen);
 			Match match = Regex.Match(msg.Response, @".*you are (now|no longer) ignoring (.*)\)");
 			if(match.Success)
-				Util.PopulateIgnoreSettings(match.Result("$2"), mdiParent.Database);
+				Util.PopulateIgnoreSettings(match.Result("$2"), Util.Database);
 			else
-				post("*** Regex failed (ignore) ***", Color.Red);
+				post("*** Regex failed (ignore) ***\n", Color.Red);
 		}
 
 		private void commandResponse(LeafMessage msg)
 		{
+			if(msg.Response == "") return;     // If there is nothing to write, don't write anything!
 			chatArea.SelectionFont = new Font( "Lucida Console",
 												8.25F, 
 												System.Drawing.FontStyle.Regular,
 												System.Drawing.GraphicsUnit.Point,
 												((System.Byte)(0)));
 
+			chatArea.Select(chatArea.Text.Length, 0);     // Go to the end of the text
 			chatArea.SelectionColor = Color.Gray;
 			chatArea.AppendText(msg.Response);
 
@@ -332,12 +320,12 @@ namespace lilySharp
 			if(userText.Text.StartsWith("/"))
 			{
 				LeafMessage msg = new LeafMessage(userText.Text, new ProcessResponse(commandResponse));
-				mdiParent.PostMessage(msg);
+				Sock.Instance.PostMessage(msg);
 			}
 			else if(userText.Text.StartsWith("&id "))
 			{
 				string name = userText.Text.Substring(4);
-				string id = mdiParent.getObjectId(name);
+				string id = Util.Database.GetByName(name).Handle;
 				if(id == null)
 					post(name + " was not found in my object database.\n", Color.DarkBlue);
 				else
@@ -346,7 +334,7 @@ namespace lilySharp
 			else if(userText.Text.StartsWith("&name "))
 			{
 				string id = userText.Text.Substring(6);
-				ILilyObject item = (ILilyObject)mdiParent.Database[id];
+				ILilyObject item = (ILilyObject)Util.Database[id];
 				if(item == null)
 					post(id + " was not found in my object database.\n", Color.DarkBlue);
 				else
@@ -355,11 +343,11 @@ namespace lilySharp
 			else if(this.lilyObject != null)
 			{
 				// Need to replace spaces in the name with underscores, or else lily will think the line ends early
-				mdiParent.Out.WriteLine(prefix + this.lilyObject.Name.Replace(' ', '_') + ";" + userText.Text);
+				Sock.Instance.Write(prefix + this.lilyObject.Name.Replace(' ', '_') + ";" + userText.Text);
 			}
 			else
 			{
-				((LilyParent)MdiParent).Out.WriteLine(userText.Text);
+				Sock.Instance.Write(userText.Text);
 			}
 			
 			userText.Clear();
@@ -407,7 +395,7 @@ namespace lilySharp
 			post("(" + notify.Time.TimeOfDay + ") <" + notify.Source.Name + "> ", Color.Black);
 
 			// Message
-			if(notify.Source == ((LilyParent)MdiParent).Me) 
+			if(notify.Source == Util.Database.Me)
 				post(notify.Value + "\n", Color.Red);
 			else 
 				post(notify.Value + "\n", Color.Blue);
@@ -557,7 +545,7 @@ namespace lilySharp
 			Marshal.FreeCoTaskMem(lParam);
 		}
 
-		private void LilyWindow_Activated(object sender, System.EventArgs e)
+		public void LilyWindow_Activated(object sender, System.EventArgs e)
 		{
 			userText.Focus();
 		}
@@ -590,6 +578,7 @@ namespace lilySharp
 
 		private void tearItem_Click(object sender, System.EventArgs e)
 		{
+			mainWindow = MdiParent as LilyParent;
 			this.MdiParent = null;
 			joinItem.Visible = true;
 			tearItem.Visible = false;
@@ -597,11 +586,22 @@ namespace lilySharp
 
 		private void joinItem_Click(object sender, System.EventArgs e)
 		{
-			this.MdiParent = this.mdiParent;
+			MdiParent = mainWindow;
 			tearItem.Visible = true;
 			joinItem.Visible = false;
 			this.Location = new Point(10,10);
 		}
 
+		private void LilyWindow_Load(object sender, System.EventArgs e)
+		{
+			// TODO: Fix MdiChild activation
+		//	mdiParent.MdiChildActivate += new EventHandler(this.LilyWindow_Activated);
+		}
+
+	
+		private void sock_NewInfo(object sender, SockEventArgs e)
+		{
+			Post(e.Line);
+		}
 	}
 }

@@ -191,6 +191,16 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
+                    RelPath = "GetObjectDlg.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "GetObjectDlg.resx"
+                    DependentUpon = "GetObjectDlg.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
                     RelPath = "HashDb.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -323,6 +333,11 @@
                     RelPath = "PrivateMsg.resx"
                     DependentUpon = "PrivateMsg.cs"
                     BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "Sock.cs"
+                    SubType = "Component"
+                    BuildAction = "Compile"
                 />
                 <File
                     RelPath = "UserPassDlg.cs"

@@ -17,7 +17,7 @@ namespace lilySharp
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.ListView discList;
 		private System.Windows.Forms.GroupBox groupBox1;
-		private LilyParent parent;
+	//	private LilyParent parent;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -27,7 +27,7 @@ namespace lilySharp
 		/// Constructor
 		/// </summary>
 		/// <param name="parent">The parent of the dialog</param>
-		public JoinDiscDlg(LilyParent parent)
+		public JoinDiscDlg()
 		{
 			//
 			// Required for Windows Form Designer support
@@ -37,7 +37,6 @@ namespace lilySharp
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
-			this.parent = parent;
 
 			/*
 			 * Populate the ListView
@@ -53,7 +52,7 @@ namespace lilySharp
 			discList.Columns.Add("Moderated", -2, HorizontalAlignment.Center);
 
 			// Add discussion information
-			foreach(DictionaryEntry entry in parent.Database)
+			foreach(DictionaryEntry entry in Util.Database)
 			{
 				IDiscussion disc;
 				ListViewItem discRow;
@@ -230,7 +229,7 @@ namespace lilySharp
 			}
 			
             LeafMessage msg = new LeafMessage("/join " + discList.SelectedItems[0].Text.Replace(" ","_"), discList.SelectedItems[0].Text,  new ProcessResponse(this.ProcessResponse));
-			parent.PostMessage(msg);
+			Sock.Instance.PostMessage(msg);
 		}
 
 		private void cancelBtn_Click(object sender, System.EventArgs e)

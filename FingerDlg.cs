@@ -23,7 +23,6 @@ namespace lilySharp
 		private System.Windows.Forms.LinkLabel webLbl;
 		private System.Windows.Forms.Button infoBtn;
 		private IUser user;
-		private LilyParent parent;
 		private System.Windows.Forms.Label pseudoLbl;
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.Panel panel2;
@@ -34,7 +33,7 @@ namespace lilySharp
 		/// </summary>
 		private System.ComponentModel.Container components = null;
 
-		public FingerDlg(LilyParent parent, IUser user)
+		public FingerDlg(IUser user)
 		{
 			//
 			// Required for Windows Form Designer support
@@ -45,11 +44,9 @@ namespace lilySharp
 			// TODO: Add any constructor code after InitializeComponent call
 			//
 			this.user = user;
-			this.parent = parent;
 			this.Text = user.Name + "'s Finger Information";
 
 			infoBtn.Enabled = user.Info;
-			parent.PostMessage(new LeafMessage("/finger " + user.Name.Replace(' ','_'),  new ProcessResponse(this.ProcessResponse)));
 		}
 
 		/// <summary>
@@ -75,24 +72,24 @@ namespace lilySharp
 		private void InitializeComponent()
 		{
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
-			this.label1 = new System.Windows.Forms.Label();
-			this.label2 = new System.Windows.Forms.Label();
-			this.label3 = new System.Windows.Forms.Label();
-			this.label4 = new System.Windows.Forms.Label();
-			this.pseudoLbl = new System.Windows.Forms.Label();
-			this.nameLbl = new System.Windows.Forms.Label();
-			this.emailLbl = new System.Windows.Forms.LinkLabel();
-			this.webLbl = new System.Windows.Forms.LinkLabel();
-			this.infoBtn = new System.Windows.Forms.Button();
-			this.panel1 = new System.Windows.Forms.Panel();
-			this.panel2 = new System.Windows.Forms.Panel();
-			this.panel3 = new System.Windows.Forms.Panel();
 			this.panel4 = new System.Windows.Forms.Panel();
+			this.webLbl = new System.Windows.Forms.LinkLabel();
+			this.label4 = new System.Windows.Forms.Label();
+			this.panel3 = new System.Windows.Forms.Panel();
+			this.emailLbl = new System.Windows.Forms.LinkLabel();
+			this.label3 = new System.Windows.Forms.Label();
+			this.panel2 = new System.Windows.Forms.Panel();
+			this.nameLbl = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
+			this.panel1 = new System.Windows.Forms.Panel();
+			this.pseudoLbl = new System.Windows.Forms.Label();
+			this.label1 = new System.Windows.Forms.Label();
+			this.infoBtn = new System.Windows.Forms.Button();
 			this.groupBox1.SuspendLayout();
-			this.panel1.SuspendLayout();
-			this.panel2.SuspendLayout();
-			this.panel3.SuspendLayout();
 			this.panel4.SuspendLayout();
+			this.panel3.SuspendLayout();
+			this.panel2.SuspendLayout();
+			this.panel1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// groupBox1
@@ -109,67 +106,16 @@ namespace lilySharp
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Finger Information";
 			// 
-			// label1
+			// panel4
 			// 
-			this.label1.Dock = System.Windows.Forms.DockStyle.Left;
-			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(64, 24);
-			this.label1.TabIndex = 0;
-			this.label1.Text = "Pseudo:";
-			// 
-			// label2
-			// 
-			this.label2.Dock = System.Windows.Forms.DockStyle.Left;
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(64, 24);
-			this.label2.TabIndex = 1;
-			this.label2.Text = "Name:";
-			// 
-			// label3
-			// 
-			this.label3.Dock = System.Windows.Forms.DockStyle.Left;
-			this.label3.Name = "label3";
-			this.label3.Size = new System.Drawing.Size(64, 24);
-			this.label3.TabIndex = 2;
-			this.label3.Text = "Email:";
-			// 
-			// label4
-			// 
-			this.label4.Dock = System.Windows.Forms.DockStyle.Left;
-			this.label4.Name = "label4";
-			this.label4.Size = new System.Drawing.Size(64, 24);
-			this.label4.TabIndex = 3;
-			this.label4.Text = "Web Page:";
-			// 
-			// pseudoLbl
-			// 
-			this.pseudoLbl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.pseudoLbl.Location = new System.Drawing.Point(64, 0);
-			this.pseudoLbl.Name = "pseudoLbl";
-			this.pseudoLbl.Size = new System.Drawing.Size(298, 24);
-			this.pseudoLbl.TabIndex = 4;
-			this.pseudoLbl.Text = "retrieving...";
-			// 
-			// nameLbl
-			// 
-			this.nameLbl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.nameLbl.Location = new System.Drawing.Point(64, 0);
-			this.nameLbl.Name = "nameLbl";
-			this.nameLbl.Size = new System.Drawing.Size(298, 24);
-			this.nameLbl.TabIndex = 5;
-			this.nameLbl.Text = "retrieving...";
-			// 
-			// emailLbl
-			// 
-			this.emailLbl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.emailLbl.Enabled = false;
-			this.emailLbl.Location = new System.Drawing.Point(64, 0);
-			this.emailLbl.Name = "emailLbl";
-			this.emailLbl.Size = new System.Drawing.Size(298, 24);
-			this.emailLbl.TabIndex = 6;
-			this.emailLbl.TabStop = true;
-			this.emailLbl.Text = "retrieving...";
-			this.emailLbl.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.emailLbl_LinkClicked);
+			this.panel4.Controls.AddRange(new System.Windows.Forms.Control[] {
+																				 this.webLbl,
+																				 this.label4});
+			this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
+			this.panel4.Location = new System.Drawing.Point(3, 88);
+			this.panel4.Name = "panel4";
+			this.panel4.Size = new System.Drawing.Size(362, 24);
+			this.panel4.TabIndex = 2;
 			// 
 			// webLbl
 			// 
@@ -183,37 +129,13 @@ namespace lilySharp
 			this.webLbl.Text = "retrieving...";
 			this.webLbl.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.webLbl_LinkClicked);
 			// 
-			// infoBtn
+			// label4
 			// 
-			this.infoBtn.Anchor = (System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right);
-			this.infoBtn.Enabled = false;
-			this.infoBtn.Location = new System.Drawing.Point(288, 128);
-			this.infoBtn.Name = "infoBtn";
-			this.infoBtn.TabIndex = 1;
-			this.infoBtn.Text = "Info";
-			this.infoBtn.Click += new System.EventHandler(this.infoBtn_Click);
-			// 
-			// panel1
-			// 
-			this.panel1.Controls.AddRange(new System.Windows.Forms.Control[] {
-																				 this.pseudoLbl,
-																				 this.label1});
-			this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-			this.panel1.Location = new System.Drawing.Point(3, 16);
-			this.panel1.Name = "panel1";
-			this.panel1.Size = new System.Drawing.Size(362, 24);
-			this.panel1.TabIndex = 2;
-			// 
-			// panel2
-			// 
-			this.panel2.Controls.AddRange(new System.Windows.Forms.Control[] {
-																				 this.nameLbl,
-																				 this.label2});
-			this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
-			this.panel2.Location = new System.Drawing.Point(3, 40);
-			this.panel2.Name = "panel2";
-			this.panel2.Size = new System.Drawing.Size(362, 24);
-			this.panel2.TabIndex = 2;
+			this.label4.Dock = System.Windows.Forms.DockStyle.Left;
+			this.label4.Name = "label4";
+			this.label4.Size = new System.Drawing.Size(64, 24);
+			this.label4.TabIndex = 3;
+			this.label4.Text = "Web Page:";
 			// 
 			// panel3
 			// 
@@ -226,16 +148,91 @@ namespace lilySharp
 			this.panel3.Size = new System.Drawing.Size(362, 24);
 			this.panel3.TabIndex = 2;
 			// 
-			// panel4
+			// emailLbl
 			// 
-			this.panel4.Controls.AddRange(new System.Windows.Forms.Control[] {
-																				 this.webLbl,
-																				 this.label4});
-			this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
-			this.panel4.Location = new System.Drawing.Point(3, 88);
-			this.panel4.Name = "panel4";
-			this.panel4.Size = new System.Drawing.Size(362, 24);
-			this.panel4.TabIndex = 2;
+			this.emailLbl.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.emailLbl.Enabled = false;
+			this.emailLbl.Location = new System.Drawing.Point(64, 0);
+			this.emailLbl.Name = "emailLbl";
+			this.emailLbl.Size = new System.Drawing.Size(298, 24);
+			this.emailLbl.TabIndex = 6;
+			this.emailLbl.TabStop = true;
+			this.emailLbl.Text = "retrieving...";
+			this.emailLbl.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.emailLbl_LinkClicked);
+			// 
+			// label3
+			// 
+			this.label3.Dock = System.Windows.Forms.DockStyle.Left;
+			this.label3.Name = "label3";
+			this.label3.Size = new System.Drawing.Size(64, 24);
+			this.label3.TabIndex = 2;
+			this.label3.Text = "Email:";
+			// 
+			// panel2
+			// 
+			this.panel2.Controls.AddRange(new System.Windows.Forms.Control[] {
+																				 this.nameLbl,
+																				 this.label2});
+			this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
+			this.panel2.Location = new System.Drawing.Point(3, 40);
+			this.panel2.Name = "panel2";
+			this.panel2.Size = new System.Drawing.Size(362, 24);
+			this.panel2.TabIndex = 2;
+			// 
+			// nameLbl
+			// 
+			this.nameLbl.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.nameLbl.Location = new System.Drawing.Point(64, 0);
+			this.nameLbl.Name = "nameLbl";
+			this.nameLbl.Size = new System.Drawing.Size(298, 24);
+			this.nameLbl.TabIndex = 5;
+			this.nameLbl.Text = "retrieving...";
+			// 
+			// label2
+			// 
+			this.label2.Dock = System.Windows.Forms.DockStyle.Left;
+			this.label2.Name = "label2";
+			this.label2.Size = new System.Drawing.Size(64, 24);
+			this.label2.TabIndex = 1;
+			this.label2.Text = "Name:";
+			// 
+			// panel1
+			// 
+			this.panel1.Controls.AddRange(new System.Windows.Forms.Control[] {
+																				 this.pseudoLbl,
+																				 this.label1});
+			this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+			this.panel1.Location = new System.Drawing.Point(3, 16);
+			this.panel1.Name = "panel1";
+			this.panel1.Size = new System.Drawing.Size(362, 24);
+			this.panel1.TabIndex = 2;
+			// 
+			// pseudoLbl
+			// 
+			this.pseudoLbl.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.pseudoLbl.Location = new System.Drawing.Point(64, 0);
+			this.pseudoLbl.Name = "pseudoLbl";
+			this.pseudoLbl.Size = new System.Drawing.Size(298, 24);
+			this.pseudoLbl.TabIndex = 4;
+			this.pseudoLbl.Text = "retrieving...";
+			// 
+			// label1
+			// 
+			this.label1.Dock = System.Windows.Forms.DockStyle.Left;
+			this.label1.Name = "label1";
+			this.label1.Size = new System.Drawing.Size(64, 24);
+			this.label1.TabIndex = 0;
+			this.label1.Text = "Pseudo:";
+			// 
+			// infoBtn
+			// 
+			this.infoBtn.Anchor = (System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right);
+			this.infoBtn.Enabled = false;
+			this.infoBtn.Location = new System.Drawing.Point(288, 128);
+			this.infoBtn.Name = "infoBtn";
+			this.infoBtn.TabIndex = 1;
+			this.infoBtn.Text = "Info";
+			this.infoBtn.Click += new System.EventHandler(this.infoBtn_Click);
 			// 
 			// FingerDlg
 			// 
@@ -246,11 +243,12 @@ namespace lilySharp
 																		  this.groupBox1});
 			this.Name = "FingerDlg";
 			this.Text = "Finger Information";
+			this.Load += new System.EventHandler(this.FingerDlg_Load);
 			this.groupBox1.ResumeLayout(false);
-			this.panel1.ResumeLayout(false);
-			this.panel2.ResumeLayout(false);
-			this.panel3.ResumeLayout(false);
 			this.panel4.ResumeLayout(false);
+			this.panel3.ResumeLayout(false);
+			this.panel2.ResumeLayout(false);
+			this.panel1.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
@@ -319,7 +317,7 @@ namespace lilySharp
 
 		private void infoBtn_Click(object sender, System.EventArgs e)
 		{
-			InfoDlg info = new InfoDlg(parent, user);
+			InfoDlg info = new InfoDlg(user);
 			info.Show();
 		}
 
@@ -349,6 +347,11 @@ namespace lilySharp
 			{
 				MessageBox.Show("Error displaying web page: " + e.Link.LinkData + "\nPlease make sure you have a default broswer configured.", "Unable to open page");
 			}
+		}
+
+		private void FingerDlg_Load(object sender, System.EventArgs e)
+		{
+			Sock.Instance.PostMessage(new LeafMessage("/finger " + user.Name.Replace(' ','_'),  new ProcessResponse(this.ProcessResponse)));
 		}
 
 	}

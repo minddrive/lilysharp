@@ -27,11 +27,9 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem menuItem3;
 		private System.Windows.Forms.MenuItem quitItem;
 		private System.Windows.Forms.ContextMenu discContextMenu;
-		private System.Windows.Forms.MenuItem menuItem1;
-		private System.Windows.Forms.MenuItem autosortItem;
 		private StatusBarPanel notifyPanel;
 
-		public JoindDiscWnd(LilyParent parent, StatusBarPanel notifyPanel)
+		public JoindDiscWnd(StatusBarPanel notifyPanel)
 		{
 			//
 			// Required for Windows Form Designer support
@@ -41,7 +39,6 @@ namespace lilySharp
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
-			this.MdiParent = parent;
 			this.notifyPanel = notifyPanel;
 			
 			discList.Columns.Add("Name", 94, HorizontalAlignment.Left);
@@ -77,8 +74,6 @@ namespace lilySharp
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.discList = new System.Windows.Forms.ListView();
 			this.discContextMenu = new System.Windows.Forms.ContextMenu();
-			this.autosortItem = new System.Windows.Forms.MenuItem();
-			this.menuItem1 = new System.Windows.Forms.MenuItem();
 			this.infoItem = new System.Windows.Forms.MenuItem();
 			this.memoItem = new System.Windows.Forms.MenuItem();
 			this.menuItem3 = new System.Windows.Forms.MenuItem();
@@ -125,47 +120,32 @@ namespace lilySharp
 			// discContextMenu
 			// 
 			this.discContextMenu.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-																							this.autosortItem,
-																							this.menuItem1,
 																							this.infoItem,
 																							this.memoItem,
 																							this.menuItem3,
 																							this.quitItem});
 			this.discContextMenu.Popup += new System.EventHandler(this.discContextMenu_Popup);
 			// 
-			// autosortItem
-			// 
-			this.autosortItem.Checked = true;
-			this.autosortItem.Index = 0;
-			this.autosortItem.RadioCheck = true;
-			this.autosortItem.Text = "New Msgs on Top";
-			this.autosortItem.Click += new System.EventHandler(this.autosortItem_Click);
-			// 
-			// menuItem1
-			// 
-			this.menuItem1.Index = 1;
-			this.menuItem1.Text = "-";
-			// 
 			// infoItem
 			// 
-			this.infoItem.Index = 2;
+			this.infoItem.Index = 0;
 			this.infoItem.Text = "Info";
 			this.infoItem.Click += new System.EventHandler(this.infoItem_Click);
 			// 
 			// memoItem
 			// 
-			this.memoItem.Index = 3;
+			this.memoItem.Index = 1;
 			this.memoItem.Text = "Memo";
 			this.memoItem.Click += new System.EventHandler(this.memoItem_Click);
 			// 
 			// menuItem3
 			// 
-			this.menuItem3.Index = 4;
+			this.menuItem3.Index = 2;
 			this.menuItem3.Text = "-";
 			// 
 			// quitItem
 			// 
-			this.quitItem.Index = 5;
+			this.quitItem.Index = 3;
 			this.quitItem.Text = "Quit";
 			this.quitItem.Click += new System.EventHandler(this.quitItem_Click);
 			// 
@@ -205,6 +185,7 @@ namespace lilySharp
 			discList.Items.Add(discRow);
 
 			discs.Add(disc);
+			disc.Window.VisibleChanged += new EventHandler(disc_VisibleChanged);
 		}
 
 		/// <summary>
@@ -213,6 +194,7 @@ namespace lilySharp
 		/// <param name="disc">IDiscussion to remove from the list</param>
 		public void Remove(IDiscussion disc)
 		{
+			// Remove the discussion and update the new message counter
 			discs.Remove(disc);
 			foreach(ListViewItem item in discList.Items)
 			{
@@ -224,7 +206,10 @@ namespace lilySharp
 				}
 			}
 
+			// update the new message bar
 			setTooltip();
+			setMessageCount();
+
 		}
 		/// <summary>
 		/// Increase the number of unread messages in the given discussion by one
@@ -246,58 +231,25 @@ namespace lilySharp
 			msgCount++;
 
 			//Update message notification in the statusbar
-			if(msgCount == 1)
-				notifyPanel.Text = "1 New Message";
-			else
-				notifyPanel.Text = msgCount + " New Messages";
-			if(notifyPanel.Icon == null)
-				notifyPanel.Icon = new Icon(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("lilySharp.message.ico"));
+			setMessageCount();
 
 			//Update the tooltip
 			setTooltip();
 
+			discList.Sort();
+
 			//Sort by message count if desired
-			if(autosortItem.Checked && ((DiscListItemComparer)discList.ListViewItemSorter).Collumn != 1)
-			{
-				discList.Sorting = SortOrder.Descending;
-				discList.ListViewItemSorter = new DiscListItemComparer(1, discList.Sorting, DiscListItemComparer.ItemType.Number);
-			}
-			else
-				discList.Sort();
-		}
-
-		/// <summary>
-		/// Flag all unread messages in the given discussion as read
-		/// </summary>
-		/// <param name="disc">The discussion who's messages have been read</param>
-		public void ClearMsg(IDiscussion disc)
-		{
-			// Clear the New Messages column for the disc, and update the mesage counter
-			foreach(ListViewItem item in discList.Items)
-			{
-				if(item.Text == disc.Name)
+			/*
+				if(autosortItem.Checked && ((DiscListItemComparer)discList.ListViewItemSorter).Collumn != 1)
 				{
-					msgCount -= int.Parse(item.SubItems[1].Text);
-					item.SubItems[1].Text = "0";
-					item.ImageIndex = -1;
+					discList.Sorting = SortOrder.Descending;
+					discList.ListViewItemSorter = new DiscListItemComparer(1, discList.Sorting, DiscListItemComparer.ItemType.Number);
 				}
-			}
-			
-			//discList.Sort();
-			setTooltip();
-
-			// Update the new message area
-			if(msgCount == 0)
-			{
-				notifyPanel.Text = "No New Messages";
-				notifyPanel.Icon = null;
-				notifyPanel.ToolTipText = "";
-			}
-			else if(msgCount == 1)
-				notifyPanel.Text = "1 New Message";
-			else
-				notifyPanel.Text = msgCount + " New Messages";
+				else
+					discList.Sort();
+			*/
 		}
+
 
 		/// <summary>
 		/// Remove all discussions from the list
@@ -348,6 +300,24 @@ namespace lilySharp
 				}
 			}
 
+		}
+
+		private void setMessageCount()
+		{
+			if(msgCount == 0)
+			{
+				notifyPanel.Text = "No New Messages";
+				notifyPanel.Icon = null;
+				notifyPanel.ToolTipText = "";
+				return;
+			}
+			else if(msgCount == 1)
+				notifyPanel.Text = "1 New Message";
+			else
+				notifyPanel.Text = msgCount + " New Messages";
+
+			if(notifyPanel.Icon == null)
+				notifyPanel.Icon = new Icon(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("lilySharp.message.ico"));
 		}
 		/// <summary>
 		/// Hide the window, instead of closing it.  We need this window to keep track of messages at all times
@@ -406,9 +376,12 @@ namespace lilySharp
 				memoItem.Enabled = false;
 				infoItem.Enabled = false;
 				quitItem.Enabled = false;
+				return;
 			}
+
 			memoItem.Enabled = selectedDisc.Memo;
 			infoItem.Enabled = selectedDisc.Info;
+			quitItem.Enabled = true;
 		}
 
 		/// <summary>
@@ -418,7 +391,7 @@ namespace lilySharp
 		/// <param name="e">Event arguments</param>
 		private void infoItem_Click(object sender, System.EventArgs e)
 		{
-            InfoDlg infoDlg = new InfoDlg(MdiParent as LilyParent, selectedDisc);
+            InfoDlg infoDlg = new InfoDlg(selectedDisc);
 			infoDlg.Show();
 		}
 
@@ -429,7 +402,7 @@ namespace lilySharp
 		/// <param name="e">Event arguments</param>
 		private void memoItem_Click(object sender, System.EventArgs e)
 		{
-			MemoDlg memoDlg = new MemoDlg(MdiParent as LilyParent, selectedDisc);
+			MemoDlg memoDlg = new MemoDlg(selectedDisc);
 			memoDlg.Show();
 		}
 
@@ -442,7 +415,7 @@ namespace lilySharp
 		{
 			if(MessageBox.Show("Really quit " + discList.SelectedItems[0].Text, "Quit Confermation", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
 			{
-				((LilyParent)MdiParent).Out.WriteLine("/quit \"" + discList.SelectedItems[0].Text + "\"");
+				//((LilyParent)MdiParent).Out.WriteLine("/quit \"" + discList.SelectedItems[0].Text + "\"");
 				discs.Remove(selectedDisc);
 				discList.Items.Remove(discList.SelectedItems[0]);
 			}
@@ -453,9 +426,26 @@ namespace lilySharp
 		/// </summary>
 		/// <param name="sender">Sender of the event</param>
 		/// <param name="e">Event arugments</param>
-		private void autosortItem_Click(object sender, System.EventArgs e)
+		private void disc_VisibleChanged(object sender, System.EventArgs e)
 		{
-			autosortItem.Checked = !autosortItem.Checked;
+			//MessageBox.Show(sender.GetType().ToString()); // Lilysharp.DiscussionWindow
+			IDiscussion disc = ((DiscussionWindow)sender).LObject as IDiscussion;
+			// Clear the New Messages column for the disc, and update the mesage counter
+			foreach(ListViewItem item in discList.Items)
+			{
+				if(item.Text == disc.Name)
+				{
+					msgCount -= int.Parse(item.SubItems[1].Text);
+					item.SubItems[1].Text = "0";
+					item.ImageIndex = -1;
+				}
+			}
+			
+			//discList.Sort();
+			setTooltip();
+
+			// Update the new message area
+			setMessageCount();
 		}
 	}
 

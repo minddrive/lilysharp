@@ -9,6 +9,7 @@ namespace lilySharp
 	public class HashDb : ILilyDb
 	{
 		private Hashtable hash;
+		private IUser myObj;
 
 		public HashDb()
 		{
@@ -50,11 +51,17 @@ namespace lilySharp
 			hash.Remove(id);
 		}
 
+		public IUser Me
+		{
+			get { return myObj;}
+			set { myObj = value;}
+		}
+
 		public ILilyObject GetByName(string name)
 		{
 			foreach(DictionaryEntry entry in hash)
 			{
-				if( ((ILilyObject)entry.Value).Name == name)
+				if( ((ILilyObject)entry.Value).Name.ToUpper() == name.ToUpper())
 					return entry.Value as ILilyObject;
 			}
 			return null;

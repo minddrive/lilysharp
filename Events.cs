@@ -98,9 +98,9 @@ namespace lilySharp
 			get{ return empty;}
 		}
 
-		public NotifyEvent(Hashtable attributes, ILilyDb database)
+		public NotifyEvent(Hashtable attributes)
 		{
-			source = database[ attributes["SOURCE"] ];
+			source = Util.Database[ attributes["SOURCE"] ];
 			eventStr = attributes["EVENT"] as string;
 
 			command = attributes["COMMAND"] == null ? "" : attributes["COMMAND"] as string;
@@ -118,7 +118,7 @@ namespace lilySharp
 
 				for(int i = 0; i < recipients.Length; i++)
 				{
-					recipients[i] = ((ILilyObject)database[ recipHandles[i] ]);
+					recipients[i] = Util.Database[ recipHandles[i] ] as ILilyObject;
 				}
 			}
 			
