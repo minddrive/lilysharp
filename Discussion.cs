@@ -11,7 +11,7 @@ namespace lilySharp
 	/// The GUI window for a discussion
 	/// </summary>
 	///
-	public class DiscussionWindow : LilyWindow, ILeafCmd
+	public class DiscussionWindow : LilyWindow
 	{
 		private System.Windows.Forms.Splitter splitter1;
 		
@@ -27,11 +27,15 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem menuItem7;
 		private System.Windows.Forms.MenuItem ignoreItem;
 		private System.Windows.Forms.MenuItem notifySetItem;
-		private System.Windows.Forms.MenuItem publicItem;
-		private System.Windows.Forms.MenuItem privateItem;
-		private System.Windows.Forms.MenuItem allIgnoreItem;
-		private System.Windows.Forms.MenuItem ignoreExcepItem;
-		private System.Windows.Forms.MenuItem addIgnoreExItem;
+		private System.Windows.Forms.MenuItem ignoreHereItem;
+		private System.Windows.Forms.MenuItem ignorePrivateItem;
+		private System.Windows.Forms.MenuItem ignoreInDiscItem;
+		private System.Windows.Forms.MenuItem ignoreInDiscAllItem;
+		private System.Windows.Forms.MenuItem ignoreInDiscAddItem;
+		private System.Windows.Forms.MenuItem ignoreInDiscExceptionsAddItem;
+		private System.Windows.Forms.MenuItem ignoreInDiscExceptionItem;
+		private System.Windows.Forms.MenuItem ignoreInDiscSeperator;
+		private System.Windows.Forms.MenuItem ignoreInDiscExceptionsSeperator;
 
 		private delegate void writeText(string text, Color color);
 		private delegate void showWindow();
@@ -96,11 +100,15 @@ namespace lilySharp
 			this.fingerItem = new System.Windows.Forms.MenuItem();
 			this.menuItem7 = new System.Windows.Forms.MenuItem();
 			this.ignoreItem = new System.Windows.Forms.MenuItem();
-			this.publicItem = new System.Windows.Forms.MenuItem();
-			this.privateItem = new System.Windows.Forms.MenuItem();
-			this.allIgnoreItem = new System.Windows.Forms.MenuItem();
-			this.ignoreExcepItem = new System.Windows.Forms.MenuItem();
-			this.addIgnoreExItem = new System.Windows.Forms.MenuItem();
+			this.ignorePrivateItem = new System.Windows.Forms.MenuItem();
+			this.ignoreInDiscItem = new System.Windows.Forms.MenuItem();
+			this.ignoreInDiscAllItem = new System.Windows.Forms.MenuItem();
+			this.ignoreInDiscSeperator = new System.Windows.Forms.MenuItem();
+			this.ignoreInDiscAddItem = new System.Windows.Forms.MenuItem();
+			this.ignoreInDiscExceptionItem = new System.Windows.Forms.MenuItem();
+			this.ignoreInDiscExceptionsAddItem = new System.Windows.Forms.MenuItem();
+			this.ignoreInDiscExceptionsSeperator = new System.Windows.Forms.MenuItem();
+			this.ignoreHereItem = new System.Windows.Forms.MenuItem();
 			this.notifySetItem = new System.Windows.Forms.MenuItem();
 			this.menuItem5 = new System.Windows.Forms.MenuItem();
 			this.pmItem = new System.Windows.Forms.MenuItem();
@@ -112,23 +120,23 @@ namespace lilySharp
 			// panel1
 			// 
 			this.panel1.Location = new System.Drawing.Point(0, 261);
-			this.panel1.Size = new System.Drawing.Size(496, 24);
+			this.panel1.Size = new System.Drawing.Size(405, 24);
 			this.panel1.Visible = true;
 			// 
 			// chatArea
 			// 
 			this.chatArea.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
-			this.chatArea.Size = new System.Drawing.Size(408, 261);
+			this.chatArea.Size = new System.Drawing.Size(405, 261);
 			this.chatArea.Visible = true;
 			// 
 			// sendBtn
 			// 
-			this.sendBtn.Location = new System.Drawing.Point(421, 0);
+			this.sendBtn.Location = new System.Drawing.Point(330, 0);
 			this.sendBtn.Visible = true;
 			// 
 			// userText
 			// 
-			this.userText.Size = new System.Drawing.Size(421, 20);
+			this.userText.Size = new System.Drawing.Size(330, 20);
 			this.userText.Visible = true;
 			// 
 			// userListMenu
@@ -171,42 +179,68 @@ namespace lilySharp
 			// 
 			this.ignoreItem.Index = 4;
 			this.ignoreItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-																					   this.publicItem,
-																					   this.privateItem});
+																					   this.ignorePrivateItem,
+																					   this.ignoreInDiscItem,
+																					   this.ignoreHereItem});
 			this.ignoreItem.Text = "Ignore";
 			// 
-			// publicItem
+			// ignorePrivateItem
 			// 
-			this.publicItem.Index = 0;
-			this.publicItem.Text = "Public";
-			this.publicItem.Click += new System.EventHandler(this.publicItem_Click);
+			this.ignorePrivateItem.Index = 0;
+			this.ignorePrivateItem.Text = "Privately";
+			this.ignorePrivateItem.Click += new System.EventHandler(this.ignorePrivateItem_Click);
 			// 
-			// privateItem
+			// ignoreInDiscItem
 			// 
-			this.privateItem.Index = 1;
-			this.privateItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-																						this.allIgnoreItem,
-																						this.ignoreExcepItem});
-			this.privateItem.Text = "Private";
+			this.ignoreInDiscItem.Index = 1;
+			this.ignoreInDiscItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+																							 this.ignoreInDiscAllItem,
+																							 this.ignoreInDiscAddItem,
+																							 this.ignoreInDiscSeperator,
+																							 this.ignoreInDiscExceptionItem});
+			this.ignoreInDiscItem.Text = "In Disc";
 			// 
-			// allIgnoreItem
+			// ignoreInDiscAllItem
 			// 
-			this.allIgnoreItem.Index = 0;
-			this.allIgnoreItem.Text = "All";
-			this.allIgnoreItem.Click += new System.EventHandler(this.allIgnoreItem_Click);
+			this.ignoreInDiscAllItem.Index = 0;
+			this.ignoreInDiscAllItem.Text = "All";
+			this.ignoreInDiscAllItem.Click += new System.EventHandler(this.ignoreInDiscAllItem_Click);
 			// 
-			// ignoreExcepItem
+			// ignoreInDiscSeperator
 			// 
-			this.ignoreExcepItem.Index = 1;
-			this.ignoreExcepItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-																							this.addIgnoreExItem});
-			this.ignoreExcepItem.Text = "Exceptions";
+			this.ignoreInDiscSeperator.Index = 2;
+			this.ignoreInDiscSeperator.Text = "-";
 			// 
-			// addIgnoreExItem
+			// ignoreInDiscAddItem
 			// 
-			this.addIgnoreExItem.Index = 0;
-			this.addIgnoreExItem.Text = "Add...";
-			this.addIgnoreExItem.Click += new System.EventHandler(this.addIgnoreExItem_Click);
+			this.ignoreInDiscAddItem.Index = 1;
+			this.ignoreInDiscAddItem.Text = "Add...";
+			this.ignoreInDiscAddItem.Click += new System.EventHandler(this.ignoreInDiscAddItem_Click);
+			// 
+			// ignoreInDiscExceptionItem
+			// 
+			this.ignoreInDiscExceptionItem.Index = 3;
+			this.ignoreInDiscExceptionItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+																									  this.ignoreInDiscExceptionsAddItem,
+																									  this.ignoreInDiscExceptionsSeperator});
+			this.ignoreInDiscExceptionItem.Text = "Except";
+			// 
+			// ignoreInDiscExceptionsAddItem
+			// 
+			this.ignoreInDiscExceptionsAddItem.Index = 0;
+			this.ignoreInDiscExceptionsAddItem.Text = "Add...";
+			this.ignoreInDiscExceptionsAddItem.Click += new System.EventHandler(this.ignoreInDiscExceptionsAddItem_Click);
+			// 
+			// ignoreInDiscExceptionsSeperator
+			// 
+			this.ignoreInDiscExceptionsSeperator.Index = 1;
+			this.ignoreInDiscExceptionsSeperator.Text = "-";
+			// 
+			// ignoreHereItem
+			// 
+			this.ignoreHereItem.Index = 2;
+			this.ignoreHereItem.Text = "Here";
+			this.ignoreHereItem.Click += new System.EventHandler(this.ignoreHereItem_Click);
 			// 
 			// notifySetItem
 			// 
@@ -229,7 +263,7 @@ namespace lilySharp
 			this.splitter1.Dock = System.Windows.Forms.DockStyle.Right;
 			this.splitter1.Location = new System.Drawing.Point(405, 0);
 			this.splitter1.Name = "splitter1";
-			this.splitter1.Size = new System.Drawing.Size(3, 261);
+			this.splitter1.Size = new System.Drawing.Size(3, 285);
 			this.splitter1.TabIndex = 4;
 			this.splitter1.TabStop = false;
 			// 
@@ -242,7 +276,7 @@ namespace lilySharp
 			this.userList.IntegralHeight = false;
 			this.userList.Location = new System.Drawing.Point(408, 0);
 			this.userList.Name = "userList";
-			this.userList.Size = new System.Drawing.Size(88, 261);
+			this.userList.Size = new System.Drawing.Size(88, 285);
 			this.userList.TabIndex = 2;
 			this.userList.MouseMove += new System.Windows.Forms.MouseEventHandler(this.userList_MouseMove);
 			this.userList.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.userList_DrawItem);
@@ -252,10 +286,10 @@ namespace lilySharp
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
 			this.ClientSize = new System.Drawing.Size(496, 285);
 			this.Controls.AddRange(new System.Windows.Forms.Control[] {
-																		  this.splitter1,
 																		  this.chatArea,
-																		  this.userList,
-																		  this.panel1});
+																		  this.panel1,
+																		  this.splitter1,
+																		  this.userList});
 			this.Name = "DiscussionWindow";
 			this.Text = "DiscussionWindow";
 			this.VisibleChanged += new System.EventHandler(this.DiscussionWindow_VisibleChanged);
@@ -555,18 +589,49 @@ namespace lilySharp
 			fingerItem.Enabled = rightClickedUser.Finger;
 			pmItem.Enabled = true;
 
+			/*
+			 * Set ignore checks
+			 */
 			ignoreItem.Enabled = true;
-			publicItem.Checked = rightClickedUser.IgnoreSettings.Public;
-			allIgnoreItem.Checked = rightClickedUser.IgnoreSettings.Private;
-
-			foreach(MenuItem item in ignoreExcepItem.MenuItems)
-			{
-				if(item != addIgnoreExItem)
-					ignoreExcepItem.MenuItems.Remove(item);
-			}
+			ignorePrivateItem.Checked = rightClickedUser.IgnoreSettings.Private;
 			
-			foreach(IDiscussion disc in rightClickedUser.IgnoreSettings.Exceptions)
-					ignoreExcepItem.MenuItems.Add(new MenuItem(disc.Name));
+			ignoreHereItem.Checked = rightClickedUser.IgnoreSettings.Public;
+			if(rightClickedUser.IgnoreSettings.Exceptions.Contains(this.lilyObject))
+				ignoreHereItem.Checked = !ignoreHereItem.Checked;
+			
+			ignoreInDiscAllItem.Checked = rightClickedUser.IgnoreSettings.Public;
+
+			ignoreInDiscAddItem.Visible = !ignoreInDiscAllItem.Checked;
+			ignoreInDiscExceptionItem.Visible = ignoreInDiscAllItem.Checked;
+
+			/*
+			 * Clear ignore exceptions
+			 */
+			foreach(MenuItem item in ignoreInDiscItem.MenuItems)
+				if(item != this.ignoreInDiscAllItem && item != this.ignoreInDiscAddItem && item != this.ignoreInDiscSeperator && item != this.ignoreInDiscExceptionItem)
+					ignoreInDiscItem.MenuItems.Remove(item);
+
+			foreach(MenuItem item in ignoreInDiscExceptionItem.MenuItems)
+				if(item != this.ignoreInDiscExceptionsAddItem && item != this.ignoreInDiscExceptionsSeperator)
+					ignoreInDiscExceptionItem.MenuItems.Remove(item);
+
+			/*
+			 * Pouplate ignore exceptions
+			 */
+			if(rightClickedUser.IgnoreSettings.Public)
+			{
+				foreach(IDiscussion disc in rightClickedUser.IgnoreSettings.Exceptions)
+				{
+					this.ignoreInDiscExceptionItem.MenuItems.Add(new MenuItem(disc.Name));
+				}
+			}
+			else
+			{
+				foreach(IDiscussion disc in rightClickedUser.IgnoreSettings.Exceptions)
+				{
+					this.ignoreInDiscItem.MenuItems.Add(new MenuItem(disc.Name));
+				}
+			}
 
 			notifySetItem.Enabled = true;
 		}
@@ -614,32 +679,59 @@ namespace lilySharp
 			mdiParent.createPM(rightClickedUser);
 		}
 
-		private void publicIgnoreItem_Click(object sender, System.EventArgs e)
-		{
-        }
-
-		private void privateIgnoreItem_Click(object sender, System.EventArgs e)
-		{
-		}
-
 		private void DiscussionWindow_VisibleChanged(object sender, System.EventArgs e)
 		{
 			if(Visible) mdiParent.JoinedDiscList.ClearMsg(this.lilyObject as IDiscussion);
 		}
 
-		private void publicItem_Click(object sender, System.EventArgs e)
+		private void ignoreHereItem_Click(object sender, System.EventArgs e)
 		{
-			publicItem.Checked = !publicItem.Checked;
+			ignoreHereItem.Checked = !ignoreHereItem.Checked;
+			if(ignoreHereItem.Checked)
+			{
+				// Send ignore message
+				mdiParent.PostMessage(new LeafMessage("/ignore " + rightClickedUser.Name + " " + this.lilyObject.Name, "ignore",  new ProcessResponse(ignoreResponse)));
+			}
+			else
+			{
+				// Send unignore message
+				mdiParent.PostMessage(new LeafMessage("/unignore " + rightClickedUser.Name + " " + this.lilyObject.Name, "ignore",  new ProcessResponse(ignoreResponse)));
+			}
 		}
 
-		private void allIgnoreItem_Click(object sender, System.EventArgs e)
+		private void ignorePrivateItem_Click(object sender, System.EventArgs e)
 		{
-			allIgnoreItem.Checked = ! allIgnoreItem.Checked;
+			// set menuitem check
+			ignorePrivateItem.Checked = !ignorePrivateItem.Checked;
+
+			// Send ignore message
+			if(ignorePrivateItem.Checked)
+				mdiParent.PostMessage(new LeafMessage("/ignore " + rightClickedUser.Name.Replace(' ','_'), "ignore",  new ProcessResponse(ignoreResponse)));
+			else
+				mdiParent.PostMessage(new LeafMessage("/unignore " + rightClickedUser.Name.Replace(' ','_'), "ignore",  new ProcessResponse(ignoreResponse)));
+
 		}
 
-		private void addIgnoreExItem_Click(object sender, System.EventArgs e)
+		private void ignoreInDiscAllItem_Click(object sender, System.EventArgs e)
 		{
-			MessageBox.Show("Implement me!!!");
+			// Set menuitem check
+			ignoreInDiscAllItem.Checked = !ignoreInDiscAllItem.Checked;
+
+			// Send ignore message
+			if(ignoreInDiscAllItem.Checked)
+				mdiParent.PostMessage(new LeafMessage("/ignore " + rightClickedUser.Name.Replace(' ','_') + " public", "ignore",  new ProcessResponse(ignoreResponse)));
+			else
+				mdiParent.PostMessage(new LeafMessage("/unignore " + rightClickedUser.Name.Replace(' ','_') + " public", "ignore",  new ProcessResponse(ignoreResponse)));
+		}
+
+		private void ignoreInDiscAddItem_Click(object sender, System.EventArgs e)
+		{
+		
+		}
+
+		private void ignoreInDiscExceptionsAddItem_Click(object sender, System.EventArgs e)
+		{
+		
 		}
 
 	}

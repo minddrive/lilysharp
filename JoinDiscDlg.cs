@@ -9,7 +9,7 @@ namespace lilySharp
 	/// <summary>
 	/// Discussion Joining dialog.
 	/// </summary>
-	public class JoinDiscDlg : System.Windows.Forms.Form, ILeafCmd
+	public class JoinDiscDlg : System.Windows.Forms.Form
 	{
 		private System.Windows.Forms.Button joinBtn;
 		private System.Windows.Forms.Button cancelBtn;
@@ -229,7 +229,7 @@ namespace lilySharp
 				return;
 			}
 			
-            LeafMessage msg = new LeafMessage("/join " + discList.SelectedItems[0].Text.Replace(" ","_"), discList.SelectedItems[0].Text, this);
+            LeafMessage msg = new LeafMessage("/join " + discList.SelectedItems[0].Text.Replace(" ","_"), discList.SelectedItems[0].Text,  new ProcessResponse(this.ProcessResponse));
 			parent.PostMessage(msg);
 		}
 

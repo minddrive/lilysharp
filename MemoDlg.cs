@@ -11,7 +11,7 @@ namespace lilySharp
 	/// <summary>
 	/// Summary description for MemoDlg.
 	/// </summary>
-	public class MemoDlg : System.Windows.Forms.Form, ILeafCmd
+	public class MemoDlg : System.Windows.Forms.Form
 	{
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.Panel panel2;
@@ -45,7 +45,7 @@ namespace lilySharp
 			this.source = source;
 			this.Text = source.Name + "'s Memos";
 
-			LeafMessage msg = new LeafMessage("/memo " + source.Name.Replace(' ','_'), "list", this);
+			LeafMessage msg = new LeafMessage("/memo " + source.Name.Replace(' ','_'), "list",  new ProcessResponse(this.ProcessResponse));
 			parent.PostMessage(msg);
 
 		}
@@ -216,7 +216,7 @@ namespace lilySharp
 		private void memoList_SelectedIndexChanged(object sender, System.EventArgs e)
 		{
 			this.dateLable.Text = "Date: " + ((Memo)memoList.SelectedItem).GetDate();
-			LeafMessage msg = new LeafMessage("/memo " + source.Name.Replace(' ', '_') + " \"" + memoList.SelectedItem + "\"", "memo", this);
+			LeafMessage msg = new LeafMessage("/memo " + source.Name.Replace(' ', '_') + " \"" + memoList.SelectedItem + "\"", "memo",  new ProcessResponse(this.ProcessResponse));
 			parent.PostMessage(msg);
 			memoBox.Text = "Retrieving memo...";
 		}

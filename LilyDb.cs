@@ -147,6 +147,11 @@ namespace lilySharp
 
 		public ArrayList Exceptions;
 
+		public Ignore()
+		{
+			Exceptions = new ArrayList();
+		}
+
 		public Ignore(bool pub, bool priv)
 		{
 			Public = pub;

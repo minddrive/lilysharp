@@ -19,7 +19,7 @@ namespace lilySharp
 	/// <remarks>
 	/// An SLCP-based .NET GUI client for Lily
 	/// </remarks>
-	public class LilyParent : System.Windows.Forms.Form, ILeafCmd
+	public class LilyParent : System.Windows.Forms.Form
 	{
 		public delegate void onNotifyDelegate(NotifyEvent notify);
 		public delegate void eventDelegate(string line);
@@ -40,7 +40,7 @@ namespace lilySharp
 		private LilyWindow console;
 		private DiagConsole diag;
 		private IUser me;
-		private HashDb database = new HashDb();
+		private ILilyDb database = new HashDb();
 		private ArrayList commandQueue = new ArrayList();
 		private LoginDialog loginDlg;
 		private JoindDiscWnd joinedDiscList;
@@ -66,6 +66,8 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem diagConsoleItem;
 		private System.Windows.Forms.MenuItem menuItem4;
 		private System.Windows.Forms.MenuItem joinedItem;
+		private System.Windows.Forms.MenuItem menuItem5;
+		private System.Windows.Forms.MenuItem menuItem6;
 		private System.ComponentModel.IContainer components;
 
 		public event onNotifyDelegate UpdateUser;
@@ -147,6 +149,8 @@ namespace lilySharp
 			this.discList = new System.Windows.Forms.MenuItem();
 			this.joinItem = new System.Windows.Forms.MenuItem();
 			this.createItem = new System.Windows.Forms.MenuItem();
+			this.menuItem4 = new System.Windows.Forms.MenuItem();
+			this.joinedItem = new System.Windows.Forms.MenuItem();
 			this.windowItem = new System.Windows.Forms.MenuItem();
 			this.cascadeItem = new System.Windows.Forms.MenuItem();
 			this.horizontalItem = new System.Windows.Forms.MenuItem();
@@ -159,8 +163,8 @@ namespace lilySharp
 			this.disconnectBtn = new System.Windows.Forms.ToolBarButton();
 			this.discBtn = new System.Windows.Forms.ToolBarButton();
 			this.toolbarLst = new System.Windows.Forms.ImageList(this.components);
-			this.menuItem4 = new System.Windows.Forms.MenuItem();
-			this.joinedItem = new System.Windows.Forms.MenuItem();
+			this.menuItem5 = new System.Windows.Forms.MenuItem();
+			this.menuItem6 = new System.Windows.Forms.MenuItem();
 			this.SuspendLayout();
 			// 
 			// mainMenu1
@@ -169,6 +173,7 @@ namespace lilySharp
 																					  this.fileItem,
 																					  this.discList,
 																					  this.windowItem,
+																					  this.menuItem5,
 																					  this.helpItem});
 			// 
 			// fileItem
@@ -242,6 +247,17 @@ namespace lilySharp
 			this.createItem.Text = "&Create";
 			this.createItem.Click += new System.EventHandler(this.createItem_Click);
 			// 
+			// menuItem4
+			// 
+			this.menuItem4.Index = 2;
+			this.menuItem4.Text = "-";
+			// 
+			// joinedItem
+			// 
+			this.joinedItem.Index = 3;
+			this.joinedItem.Text = "J&oined";
+			this.joinedItem.Click += new System.EventHandler(this.joinedItem_Click);
+			// 
 			// windowItem
 			// 
 			this.windowItem.Index = 2;
@@ -272,7 +288,7 @@ namespace lilySharp
 			// 
 			// helpItem
 			// 
-			this.helpItem.Index = 3;
+			this.helpItem.Index = 4;
 			this.helpItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
 																					 this.diagConsoleItem});
 			this.helpItem.Text = "&Help";
@@ -331,16 +347,18 @@ namespace lilySharp
 			this.toolbarLst.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("toolbarLst.ImageStream")));
 			this.toolbarLst.TransparentColor = System.Drawing.Color.Transparent;
 			// 
-			// menuItem4
+			// menuItem5
 			// 
-			this.menuItem4.Index = 2;
-			this.menuItem4.Text = "-";
+			this.menuItem5.Index = 3;
+			this.menuItem5.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+																					  this.menuItem6});
+			this.menuItem5.Text = "User";
 			// 
-			// joinedItem
+			// menuItem6
 			// 
-			this.joinedItem.Index = 3;
-			this.joinedItem.Text = "J&oined";
-			this.joinedItem.Click += new System.EventHandler(this.joinedItem_Click);
+			this.menuItem6.Index = 0;
+			this.menuItem6.Text = "Ignore Settings";
+			this.menuItem6.Click += new System.EventHandler(this.menuItem6_Click);
 			// 
 			// LilyParent
 			// 
@@ -391,7 +409,7 @@ namespace lilySharp
 		/// Allows access to the client Lily database
 		/// </summary>
 		/// <value>Allows access to the client Lily database</value>
-		public HashDb Database
+		public ILilyDb Database
 		{
 			get { return database;}
 		}
@@ -669,8 +687,8 @@ namespace lilySharp
 				connectPanel.Text = "Connected";
 				outStream.WriteLine("/set message_echo yes");
 				outStream.WriteLine("#$# client LilySharp 0.60");
-				this.PostMessage(new LeafMessage("/where " + me.Name, "where", this));
-				this.PostMessage(new LeafMessage("/ignore", "ignore", this));
+				this.PostMessage(new LeafMessage("/where " + me.Name, new ProcessResponse(myDiscsRecieved)));
+				this.PostMessage(new LeafMessage("/ignore", new ProcessResponse(ignoreSettingsRecieved)));
 				joinItem.Enabled = true;
 				createItem.Enabled = true;
 			}
@@ -694,6 +712,12 @@ namespace lilySharp
 				if((string)dataAttributes["NAME"] == "whoami")
 				{
 					me = (IUser)database[dataAttributes["VALUE"]];
+				}
+				else if( (string)dataAttributes["NAME"] == "events")
+				{
+					// It's safe to ignore this.
+					//   If there's an event my client doesn't know about, there's nothing I can do here to help that
+					//   If there are events my client does handle that arn't listed, nothing will break, it's just unused code.
 				}
 				else
 				{
@@ -812,8 +836,10 @@ namespace lilySharp
 						((IUser)notify.Source).State = States.Detached;
 						if(UpdateUser != null) UpdateUser(notify);
 						break;
-					case "attach":
 					case "unidle":
+						if(UpdateUser != null) UpdateUser(notify);
+						break;
+					case "attach":
 					case "here":
 					case "connect":
 						((IUser)notify.Source).State = States.Here;
@@ -831,7 +857,7 @@ namespace lilySharp
 						if(notify.Source == me)
 							foreach(IDiscussion disc in notify.Recipients)
 							{
-								this.createDiscWindow(disc.Handle);
+								this.createDiscWindow(disc);
 								joinedDiscList.Add(disc);
 							}
 
@@ -871,7 +897,7 @@ namespace lilySharp
 					case "create":
 						if(notify.Source == me)
 						{
-							createDiscWindow(notify.Recipients[0].Handle);
+							createDiscWindow(notify.Recipients[0] as IDiscussion);
 							joinedDiscList.Add(notify.Recipients[0] as IDiscussion);
 						}
 
@@ -959,7 +985,7 @@ namespace lilySharp
 		/// <summary>
 		/// Handles leaf-cmd messages
 		/// </summary>
-		/// <param name="line">The leaf-cmd message from the server</param>
+		/// <param name="line">The leaf-cmd message from the server</param>	
 		private void handleCommandItem(string line)
 		{
 			int ID = 0;
@@ -1026,7 +1052,48 @@ namespace lilySharp
 					command = "-error-";
 					break;
 			}
-			//console.Post("*** ID: " + ID + "\n*** Command: " + command);
+		}
+
+		
+		private void myDiscsRecieved(LeafMessage msg)
+		{
+			/*
+		 	 * This is used to get what discussions I'm a member of.  If the server can't
+			 *   find me, then there must have been some important lost data
+			 * 
+			 * TODO:  Attempt to re-get my lilyObject.  Try to be a little more presistent.
+			 */
+			if(msg.Response.StartsWith("(could find no user to match to"))
+			{
+				MessageBox.Show("Critical Error: Current user is unknown!  Possible communication error.", "Unrecoverable error");
+				disconnect();
+				return;
+			}
+
+			// Go to the start of the disc list
+			int startIndex = msg.Response.IndexOf(' ');
+			startIndex += "are a member of ".Length;
+
+			// Itterate through the list, and populate =)
+			foreach(String id in msg.Response.Substring(startIndex).Split(','))
+			{
+				createDiscWindow(database.GetByName(id.Trim()) as IDiscussion);
+				joinedDiscList.Add((IDiscussion)database[ getObjectId(id.Trim()) ]);
+			}
+		}
+
+		private void ignoreSettingsRecieved(LeafMessage msg)
+		{
+			// Get ignore settings  $1 = Who I'm ignoring, $2 = Who's ignoring me
+			Match ignoreMatch = Regex.Match(msg.Response, @"\(you are currently ignoring (.*) and being ignored by (.*)\)");
+
+			// If noone is ignoring me, and I'm ignoring noone, don't need to do anything more
+			if(!ignoreMatch.Success || ( ignoreMatch.Result("$1") == "no one" && ignoreMatch.Result("$2") == "no one"))
+				return;
+					
+			// Populate the ignore settings
+			foreach(string ignoreString in ignoreMatch.Result("$1").Split(",".ToCharArray()))
+				Util.PopulateIgnoreSettings(ignoreString, database);
 		}
 
 		/// <summary>
@@ -1221,9 +1288,9 @@ namespace lilySharp
 		/// Creates the window for a discussion, and requests the user list of the discussion
 		/// </summary>
 		/// <param name="handle">The object ID of the discussion to create the window for</param>
-		private void createDiscWindow(string handle)
+		private void createDiscWindow(IDiscussion disc)
 		{
-			IDiscussion disc = ((IDiscussion)database[handle]);
+			//IDiscussion disc = ((IDiscussion)database[handle]);
 			if(disc.Window != null) return;
 			disc.Window = new DiscussionWindow( (IDiscussion)disc, this);
 			disc.Window.MdiParent = this;
@@ -1356,65 +1423,6 @@ namespace lilySharp
 		}
 	
 		/// <summary>
-		/// Processes the responses to LeafMessages.  Needed for the ILeafCmd interface
-		/// </summary>
-		/// <param name="msg">The message to respond to</param>
-		public void ProcessResponse(LeafMessage msg)
-		{
-			switch (msg.Tag)
-			{
-				case "where":
-					if(msg.Response.StartsWith("(could find no user to match to"))
-					{
-						MessageBox.Show("Critical Error: Current user is unknown!  Possible communication error.", "Unrecoverable error");
-						disconnect();
-						return;
-					}
-
-					int startIndex = msg.Response.IndexOf(' ');
-					startIndex += "are a member of ".Length;
-					foreach(String id in msg.Response.Substring(startIndex).Split(','))
-					{
-						createDiscWindow(getObjectId(id.Trim()));
-						joinedDiscList.Add((IDiscussion)database[ getObjectId(id.Trim()) ]);
-					}
-					break;
-				case "ignore":
-					Match ignoreMatch = Regex.Match(msg.Response, @"\(you are currently ignoring (.*) and being ignored by (.*)\)");
-					if(!ignoreMatch.Success || ( ignoreMatch.Result("$1") == "no one" && ignoreMatch.Result("$2") == "no one"))
-						return;
-					
-					foreach(Match match in Regex.Matches(ignoreMatch.Result("$1"), @",?([^{]*) {([^}]*)}") )
-					{
-						IUser ignoredUser = database.GetByName(match.Result("$1").Trim()) as IUser;
-						if(ignoredUser == null)
-							MessageBox.Show("Bad user name: |" + match.Result("$1").Trim() + "|");
-						else
-						{
-							console.Post("Ignoring " + ignoredUser.Name + " in " + match.Result("$2"));
-							Match whereIgnored = Regex.Match(match.Result("$2"), @"(privately)?( and )?(publicly)?(( except )|( and )|( ) )?(in (.*))?");
-							if(whereIgnored.Success)
-							{
-								ignoredUser.IgnoreSettings.Private = whereIgnored.Result("$1") != String.Empty;
-								ignoredUser.IgnoreSettings.Public  = whereIgnored.Result("$3") != String.Empty;
-								if(whereIgnored.Result("$9") != String.Empty)
-									foreach(string discName in whereIgnored.Result("$9").Split(",".ToCharArray()))
-										ignoredUser.IgnoreSettings.Exceptions.Add(database.GetByName(discName.Trim()));
-
-								//console.Post("Private? " + (whereIgnored.Result("$1") == String.Empty ? "False" : "True"));
-								//console.Post("Public? " + (whereIgnored.Result("$3") == String.Empty ? "False" : "True"));
-								//console.Post("In Disc: " + whereIgnored.Result("$9") + "\n");
-							}
-						}
-
-					}
-					break;
-				default:
-					break;
-			}
-		}
-
-		/// <summary>
 		/// Handle clicked toolbar buttons
 		/// </summary>
 		/// <param name="sender">Sender of the event</param>
@@ -1460,6 +1468,12 @@ namespace lilySharp
 			{
 				joinedDiscList.Show();
 			}
+		}
+
+		private void menuItem6_Click(object sender, System.EventArgs e)
+		{
+			IgnoreDlg ignore = new IgnoreDlg();
+			ignore.Show();
 		}
 	}
 }

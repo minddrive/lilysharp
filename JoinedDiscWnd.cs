@@ -218,6 +218,7 @@ namespace lilySharp
 			{
 				if(item.Text == disc.Name)
 				{
+					msgCount -= int.Parse(item.SubItems[1].Text);
 					discList.Items.Remove(item);
 					break;
 				}
@@ -336,15 +337,17 @@ namespace lilySharp
 		private void setTooltip()
 		{
 			notifyPanel.ToolTipText = "";
-			for(int i = 0; i < discList.Items.Count; i++)
+
+			foreach(ListViewItem item in discList.Items)
 			{
-				if(discList.Items[i].SubItems[1].Text != "0")
+				if(item.SubItems[1].Text != "0")
 				{
 					if(notifyPanel.ToolTipText != "")
 						notifyPanel.ToolTipText += "\n";
-					notifyPanel.ToolTipText += discs[i].ToString() + ": " +discList.Items[i].SubItems[1].Text;
+					notifyPanel.ToolTipText += item.SubItems[0].Text + ": " + item.SubItems[1].Text;
 				}
 			}
+
 		}
 		/// <summary>
 		/// Hide the window, instead of closing it.  We need this window to keep track of messages at all times

@@ -11,7 +11,7 @@ namespace lilySharp
 	/// <summary>
 	/// Summary description for FingerDlg.
 	/// </summary>
-	public class FingerDlg : System.Windows.Forms.Form, ILeafCmd
+	public class FingerDlg : System.Windows.Forms.Form
 	{
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.Label label1;
@@ -49,7 +49,7 @@ namespace lilySharp
 			this.Text = user.Name + "'s Finger Information";
 
 			infoBtn.Enabled = user.Info;
-			parent.PostMessage(new LeafMessage("/finger " + user.Name.Replace(' ','_'), this));
+			parent.PostMessage(new LeafMessage("/finger " + user.Name.Replace(' ','_'),  new ProcessResponse(this.ProcessResponse)));
 		}
 
 		/// <summary>

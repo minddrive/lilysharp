@@ -13,7 +13,7 @@ namespace lilySharp
 	/// <summary>
 	/// Base class for the IDiscussion and private message windows.  Also functions as the console window
 	/// </summary>
-	public class LilyWindow : System.Windows.Forms.Form, ILeafCmd
+	public class LilyWindow : System.Windows.Forms.Form
 	{
 		protected System.Windows.Forms.Panel panel1;
 		protected System.Windows.Forms.RichTextBox chatArea;
@@ -283,25 +283,34 @@ namespace lilySharp
 			set{ allowClose = value;}
 		}
 
-		public void ProcessResponse(LeafMessage msg)
+		
+		protected void ignoreResponse(LeafMessage msg)
 		{
-			if(msg.Tag == "userCmd" && msg.Response != String.Empty)
-			{
-			
-				chatArea.SelectionFont = new Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
-				chatArea.SelectionColor = Color.Gray;
-				chatArea.AppendText(msg.Response);
-
-				chatArea.SelectionFont = new Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
-			}
-			else if(msg.Tag == "msgToDest")
-			{
-				chatArea.SelectionColor = Color.DarkGray;
-				chatArea.AppendText(msg.Response);
-			}
-
+			post("*** " + msg.Response, Color.DarkGreen);
+			Match match = Regex.Match(msg.Response, @".*you are (now|no longer) ignoring (.*)\)");
+			if(match.Success)
+				Util.PopulateIgnoreSettings(match.Result("$2"), mdiParent.Database);
+			else
+				post("*** Regex failed (ignore) ***", Color.Red);
 		}
 
+		private void commandResponse(LeafMessage msg)
+		{
+			chatArea.SelectionFont = new Font( "Lucida Console",
+												8.25F, 
+												System.Drawing.FontStyle.Regular,
+												System.Drawing.GraphicsUnit.Point,
+												((System.Byte)(0)));
+
+			chatArea.SelectionColor = Color.Gray;
+			chatArea.AppendText(msg.Response);
+
+			chatArea.SelectionFont = new Font(  "Microsoft Sans Serif", 
+												8.25F, 
+												System.Drawing.FontStyle.Regular, 
+												System.Drawing.GraphicsUnit.Point, 
+												((System.Byte)(0)));
+		}
 
 		/// <summary>
 		/// Handles client-specific commands and sends all other text to the lily server.
@@ -322,7 +331,7 @@ namespace lilySharp
 
 			if(userText.Text.StartsWith("/"))
 			{
-				LeafMessage msg = new LeafMessage(userText.Text, "userCmd", this);
+				LeafMessage msg = new LeafMessage(userText.Text, new ProcessResponse(commandResponse));
 				mdiParent.PostMessage(msg);
 			}
 			else if(userText.Text.StartsWith("&id "))

@@ -2,37 +2,25 @@ using System;
 
 namespace lilySharp
 {
-	/// <summary>
-	/// Interface for the Leaf-Cmd message system
-	/// </summary>
-	public interface ILeafCmd
-	{
-		/// <summary>
-		/// Processes the responce to the messages
-		/// </summary>
-		/// <param name="msg"></param>
-		void ProcessResponse(LeafMessage msg);
-	}
-
-
+	public delegate void ProcessResponse(LeafMessage msg);
 	/// <summary>
 	/// Holds the data for messages used in the ILeafCmd interface
 	/// </summary>
 	public class LeafMessage
 	{
 		private String command, response = "", tag = "";
-		private ILeafCmd source;
 		private int commandID;
+		private ProcessResponse respond;
 
 		/// <summary>
 		/// Constructor
 		/// </summary>
 		/// <param name="command">The command to send to the server</param>
 		/// <param name="src">A reference to this object so I know who sent the message</param>
-		public LeafMessage(String command, ILeafCmd src)
+		public LeafMessage(String command, ProcessResponse method)
 		{
 			this.command = command;
-			this.source  = src;
+			this.respond = method;
 		}
 
 		/// <summary>
@@ -41,11 +29,11 @@ namespace lilySharp
 		/// <param name="command">The command to send to the server</param>
 		/// <param name="tag">An additional lable to help classify the message</param>
 		/// <param name="src">A reference to this object so I know who sent the message</param>
-		public LeafMessage(string command, string tag, ILeafCmd src)
+		public LeafMessage(string command, string tag, ProcessResponse method)
 		{
 			this.command = command;
-			this.source  = src;
 			this.tag     = tag;
+			this.respond = method;
 		}
 
 		/// <summary>
@@ -92,7 +80,7 @@ namespace lilySharp
 		/// </summary>
 		public void End()
 		{
-			source.ProcessResponse(this);
+			respond(this);
 		}
 	}
 }

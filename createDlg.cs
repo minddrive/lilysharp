@@ -9,7 +9,7 @@ namespace lilySharp
 	/// <summary>
 	/// Dialog for creating a discussion
 	/// </summary>
-	public class CreateDlg : System.Windows.Forms.Form, ILeafCmd
+	public class CreateDlg : System.Windows.Forms.Form
 	{
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.Label label2;
@@ -259,7 +259,7 @@ namespace lilySharp
 				createStr += "moderated";
 
 			createStr = createStr.TrimEnd(new char[] {','}); //Trim a trailing comma if the disc isn't moderated, but is emote or private
-			LeafMessage msg = new LeafMessage(createStr, this);
+			LeafMessage msg = new LeafMessage(createStr, new ProcessResponse(this.ProcessResponse));
 			parent.PostMessage(msg);
 		}
 	

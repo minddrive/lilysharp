@@ -10,7 +10,7 @@ namespace lilySharp
 	/// <summary>
 	/// Displays a user's info
 	/// </summary>
-	public class InfoDlg : System.Windows.Forms.Form, ILeafCmd
+	public class InfoDlg : System.Windows.Forms.Form
 	{
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.Button closeBtn;
@@ -31,7 +31,7 @@ namespace lilySharp
 			// TODO: Add any constructor code after InitializeComponent call
 			//
 			this.Text = infoSource.Name + "'s info";
-			LeafMessage msg = new LeafMessage("/info \"" + infoSource.Name + "\"", this);
+			LeafMessage msg = new LeafMessage("/info \"" + infoSource.Name + "\"",  new ProcessResponse(this.ProcessResponse));
 			parent.PostMessage(msg);
 		}
 
