@@ -13,7 +13,7 @@ namespace lilySharp
 	/// <summary>
 	/// Base class for the IDiscussion and private message windows.  Also functions as the console window
 	/// </summary>
-	public class LilyWindow : System.Windows.Forms.Form
+	public class LilyWindow : System.Windows.Forms.Form, ILeafCmd
 	{
 		protected System.Windows.Forms.Panel panel1;
 		protected System.Windows.Forms.RichTextBox chatArea;
@@ -23,6 +23,8 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem clearItem;
 		private System.Windows.Forms.MenuItem scrollLockItem;
 		protected bool allowClose;
+		protected ILilyObject lilyObject;
+		protected char prefix;
 		private System.Windows.Forms.MenuItem menuItem1;
 		private System.Windows.Forms.MenuItem copyItem;
 
@@ -109,8 +111,8 @@ namespace lilySharp
 			this.AcceptButton = sendBtn;
 			this.MdiParent = parent;
 
-			parent.UpdateUser += new LilyParent.updateUserDelegate(updateUser);
-
+			parent.UpdateUser += new LilyParent.onNotifyDelegate(onNotify);
+			parent.MdiChildActivate += new EventHandler(this.LilyWindow_Activated);
 		}
 
 		/// <summary> 
@@ -125,7 +127,8 @@ namespace lilySharp
 					components.Dispose();
 				}
 			}
-			((LilyParent)MdiParent).UpdateUser -= new LilyParent.updateUserDelegate(this.updateUser);
+			((LilyParent)MdiParent).UpdateUser -= new LilyParent.onNotifyDelegate(this.onNotify);
+			ParentForm.MdiChildActivate -= new EventHandler(this.LilyWindow_Activated);
 			base.Dispose( disposing );
 		}
 
@@ -159,6 +162,8 @@ namespace lilySharp
 			this.chatArea.Size = new System.Drawing.Size(448, 389);
 			this.chatArea.TabIndex = 3;
 			this.chatArea.Text = "";
+			this.chatArea.KeyDown += new System.Windows.Forms.KeyEventHandler(this.chatArea_KeyDown);
+			this.chatArea.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.chatArea_KeyPress);
 			this.chatArea.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.chatArea_LinkClicked);
 			// 
 			// chatAreaMenu
@@ -259,6 +264,26 @@ namespace lilySharp
 			set{ MdiParent = value;}
 		}
 
+		public void ProcessResponse(LeafMessage msg)
+		{
+			if(msg.Tag == "userCmd")
+			{
+			
+				chatArea.SelectionFont = new Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
+				chatArea.SelectionColor = Color.Gray;
+				chatArea.AppendText(msg.Response);
+
+				chatArea.SelectionFont = new Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
+			}
+			else if(msg.Tag == "msgToDest")
+			{
+				chatArea.SelectionColor = Color.DarkGray;
+				chatArea.AppendText(msg.Response);
+			}
+
+		}
+
+
 		/// <summary>
 		/// Handles client-specific commands and sends all other text to the lily server.
 		/// </summary>
@@ -273,36 +298,36 @@ namespace lilySharp
 		/// </remarks>
 		protected virtual void sendBtn_Click(object sender, System.EventArgs e)
 		{
-			if(userText.Text.StartsWith("&id"))
+			if(userText.Text == string.Empty)
+				return;
+
+			if(userText.Text.StartsWith("/"))
+			{
+				LeafMessage msg = new LeafMessage(userText.Text, "userCmd", this);
+				mdiParent.PostMessage(msg);
+			}
+			else if(userText.Text.StartsWith("&id "))
 			{
 				string name = userText.Text.Substring(4);
 				string id = mdiParent.getObjectId(name);
 				if(id == null)
-					Post(name + " was not found in my object database.");
+					post(name + " was not found in my object database.\n", Color.DarkBlue);
 				else
-					Post(name + " Object Id: " + id);
+					post(name + " Object Id: " + id + "\n", Color.DarkBlue);
 			}
-			else if(userText.Text.StartsWith("&name"))
+			else if(userText.Text.StartsWith("&name "))
 			{
 				string id = userText.Text.Substring(6);
 				ILilyObject item = (ILilyObject)mdiParent.Database[id];
 				if(item == null)
-					Post(id + " was not found in my object database.");
+					post(id + " was not found in my object database.\n", Color.DarkBlue);
 				else
-					Post(id + " is " + item.Name);
+					post(id + " is " + item.Name + "\n", Color.DarkBlue);
 			}
-			else if(userText.Text.StartsWith("&state"))
+			else if(this.lilyObject != null)
 			{
-				string name = userText.Text.Substring(7);
-				if(mdiParent.getObjectId(name) == null)
-				{
-					Post(name + " was not found in my object database.");
-				}
-				else
-				{
-					IUser user = (IUser)mdiParent.Database[mdiParent.getObjectId(name)];
-					Post(name + " is " + user.State);
-				}
+				// Need to replace spaces in the name with underscores, or else lily will think the line ends early
+				mdiParent.Out.WriteLine(prefix + this.lilyObject.Name.Replace(' ', '_') + ";" + userText.Text);
 			}
 			else
 			{
@@ -388,7 +413,7 @@ namespace lilySharp
 		/// Needs to be overriden in IDiscussion/IUser windows to handle status change Notify events
 		/// </summary>
 		/// <param name="notify">The Notify event to act on</param>
-		protected virtual void updateUser(NotifyEvent notify)
+		protected virtual void onNotify(NotifyEvent notify)
 		{
 		}
 	
@@ -503,5 +528,37 @@ namespace lilySharp
 			// Always be kind to memory, and free it after use
 			Marshal.FreeCoTaskMem(lParam);
 		}
+
+		private void LilyWindow_Activated(object sender, System.EventArgs e)
+		{
+			userText.Focus();
+		}
+
+
+		#region Input Redirection to UserText
+		private bool redirToUserText = false;
+		private void chatArea_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
+		{
+			ArrayList nonFocusKeys = new ArrayList(new Keys[] {Keys.Up, Keys.Down, Keys.Left, Keys.Right, Keys.PageDown, Keys.PageUp, Keys.End, Keys.Home});
+
+			if(!nonFocusKeys.Contains(e.KeyCode) && !e.Alt && !e.Control)
+			{
+				redirToUserText = true;
+			}
+			
+		}
+
+		private void chatArea_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+		{
+			if(redirToUserText) 
+			{
+				e.Handled = true;
+				userText.Focus();
+				userText.AppendText(new string(e.KeyChar, 1));
+			}
+			
+		}
+		#endregion
+
 	}
 }

@@ -207,7 +207,7 @@ namespace lilySharp
 		{
 			if(msg.Response == "")  // Creation was a success
 			{
-				MessageBox.Show("IDiscussion " + nameField.Text + " has been created", "Create Succeded");
+				MessageBox.Show("Discussion " + nameField.Text + " has been created", "Create Succeded");
 				Close();
 			}
 			else

@@ -7,9 +7,9 @@ using System.Windows.Forms;
 namespace lilySharp
 {
 	/// <summary>
-	/// IDiscussion Joining dialog.
+	/// Discussion Joining dialog.
 	/// </summary>
-	public class JoinDiscDlg : System.Windows.Forms.Form
+	public class JoinDiscDlg : System.Windows.Forms.Form, ILeafCmd
 	{
 		private System.Windows.Forms.Button joinBtn;
 		private System.Windows.Forms.Button cancelBtn;
@@ -57,7 +57,8 @@ namespace lilySharp
 			{
 				IDiscussion disc;
 				ListViewItem discRow;
-				if(entry.Value.GetType() == typeof(IDiscussion) && ((IDiscussion)entry.Value).Window == null)
+				//if(entry.Value.GetType() == typeof(IDiscussion))    // Used to ensure an empty discList for testing
+				if(entry.Value is IDiscussion && ((IDiscussion)entry.Value).Window == null)
 				{
 					disc = (IDiscussion)entry.Value;
 					discRow = new ListViewItem(disc.Name);
@@ -73,11 +74,6 @@ namespace lilySharp
 					discList.Items.Add(discRow);
 
 				}
-			}
-
-			if(discList.Items.Count == 0)
-			{
-				MessageBox.Show("There are no discussions you are not a member of");
 			}
 		}
 
@@ -125,13 +121,13 @@ namespace lilySharp
 			// 
 			// cancelBtn
 			// 
-			this.cancelBtn.DialogResult = System.Windows.Forms.DialogResult.Cancel;
 			this.cancelBtn.Dock = System.Windows.Forms.DockStyle.Right;
 			this.cancelBtn.Location = new System.Drawing.Point(565, 0);
 			this.cancelBtn.Name = "cancelBtn";
 			this.cancelBtn.Size = new System.Drawing.Size(75, 24);
 			this.cancelBtn.TabIndex = 2;
 			this.cancelBtn.Text = "Cancel";
+			this.cancelBtn.Click += new System.EventHandler(this.cancelBtn_Click);
 			// 
 			// panel1
 			// 
@@ -168,7 +164,7 @@ namespace lilySharp
 			this.groupBox1.Size = new System.Drawing.Size(640, 253);
 			this.groupBox1.TabIndex = 6;
 			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "IDiscussion List";
+			this.groupBox1.Text = "Discussion List";
 			// 
 			// JoinDiscDlg
 			// 
@@ -179,6 +175,7 @@ namespace lilySharp
 																		  this.panel1});
 			this.Name = "JoinDiscDlg";
 			this.Text = "Join IDiscussion";
+			this.Load += new System.EventHandler(this.JoinDiscDlg_Load);
 			this.panel1.ResumeLayout(false);
 			this.groupBox1.ResumeLayout(false);
 			this.ResumeLayout(false);
@@ -186,31 +183,6 @@ namespace lilySharp
 		}
 		#endregion
 
-		
-		/// <summary>
-		/// Allows access to the discussion the user wants to join
-		/// </summary>
-		/// <value>Allows access to the discussion the user wants to join</value>
-		public IDiscussion selectedDisc
-		{
-			get
-			{
-				string discName = discList.SelectedItems[0].SubItems[0].Text;
-				return (IDiscussion)parent.Database[parent.getObjectId(discName)];
-			}
-		}
-
-		/// <summary>
-		/// Overrides the base class's implementation to prevent the showing of the dialog if there are no discussions to join
-		/// </summary>
-		/// <returns>DialogResult.Cancel if there are no discussions to join, the user's choice otherwise</returns>
-		public new DialogResult ShowDialog()
-		{
-			if(discList.Items.Count == 0)
-				return DialogResult.Cancel;
-			else
-				return base.ShowDialog();
-		}
 
 		/// <summary>
 		/// Creates an ASCII checkbox to compensate for the lack of checkboxes in the ListView control
@@ -223,6 +195,17 @@ namespace lilySharp
 			else     return "[   ]";
 		}
 
+		public void ProcessResponse(LeafMessage msg)
+		{
+			if(msg.Response == "")
+			{
+				MessageBox.Show("You have joined " + msg.Tag, "Join Succeded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				Close();
+			}
+			else
+				MessageBox.Show(msg.Response, "Unable to Join");
+		}
+
 		/// <summary>
 		/// Allows joining a discussion by double-clicking it in the list
 		/// </summary>
@@ -230,7 +213,7 @@ namespace lilySharp
 		/// <param name="e">Event arguments</param>
 		private void discList_DoubleClick(object sender, System.EventArgs e)
 		{
-			this.DialogResult = DialogResult.OK;
+			joinBtn_Click(sender, e);
 		}
 
 		/// <summary>
@@ -245,7 +228,23 @@ namespace lilySharp
 				MessageBox.Show("You must select a discussion to join", "Unable to join");
 				return;
 			}
-			this.DialogResult = DialogResult.OK;
+			
+            LeafMessage msg = new LeafMessage("/join " + discList.SelectedItems[0].Text.Replace(" ","_"), discList.SelectedItems[0].Text, this);
+			parent.PostMessage(msg);
+		}
+
+		private void cancelBtn_Click(object sender, System.EventArgs e)
+		{
+			Close();
+		}
+
+		private void JoinDiscDlg_Load(object sender, System.EventArgs e)
+		{
+			if(discList.Items.Count == 0)
+			{
+				MessageBox.Show("There are no discussions you are not a member of");
+				Close();
+			}
 		}
 	}
 }

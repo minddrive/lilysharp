@@ -21,7 +21,7 @@ namespace lilySharp
 	/// </remarks>
 	public class LilyParent : System.Windows.Forms.Form, ILeafCmd
 	{
-		public delegate void updateUserDelegate(NotifyEvent notify);
+		public delegate void onNotifyDelegate(NotifyEvent notify);
 		public delegate void eventDelegate(string line);
 		private delegate void dispatchDelegate(Hashtable table);
 
@@ -64,9 +64,11 @@ namespace lilySharp
 		private System.Windows.Forms.ToolBarButton disconnectBtn;
 		private System.Windows.Forms.MenuItem helpItem;
 		private System.Windows.Forms.MenuItem diagConsoleItem;
+		private System.Windows.Forms.MenuItem menuItem4;
+		private System.Windows.Forms.MenuItem joinedItem;
 		private System.ComponentModel.IContainer components;
 
-		public event updateUserDelegate UpdateUser;
+		public event onNotifyDelegate UpdateUser;
 
 		/// <summary>
 		/// Contructerator
@@ -102,6 +104,10 @@ namespace lilySharp
 
 			// Window of joined discussions
 			joinedDiscList = new JoindDiscWnd(this, msgPanel);
+
+			// Create Diagnostic console
+			diag = new DiagConsole();
+			diag.MdiParent = this;
 
 		}
 
@@ -145,14 +151,16 @@ namespace lilySharp
 			this.cascadeItem = new System.Windows.Forms.MenuItem();
 			this.horizontalItem = new System.Windows.Forms.MenuItem();
 			this.verticalItem = new System.Windows.Forms.MenuItem();
+			this.helpItem = new System.Windows.Forms.MenuItem();
+			this.diagConsoleItem = new System.Windows.Forms.MenuItem();
 			this.statusBar = new System.Windows.Forms.StatusBar();
 			this.toolBar1 = new System.Windows.Forms.ToolBar();
 			this.connectBtn = new System.Windows.Forms.ToolBarButton();
 			this.disconnectBtn = new System.Windows.Forms.ToolBarButton();
 			this.discBtn = new System.Windows.Forms.ToolBarButton();
 			this.toolbarLst = new System.Windows.Forms.ImageList(this.components);
-			this.helpItem = new System.Windows.Forms.MenuItem();
-			this.diagConsoleItem = new System.Windows.Forms.MenuItem();
+			this.menuItem4 = new System.Windows.Forms.MenuItem();
+			this.joinedItem = new System.Windows.Forms.MenuItem();
 			this.SuspendLayout();
 			// 
 			// mainMenu1
@@ -215,7 +223,9 @@ namespace lilySharp
 			this.discList.Index = 1;
 			this.discList.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
 																					 this.joinItem,
-																					 this.createItem});
+																					 this.createItem,
+																					 this.menuItem4,
+																					 this.joinedItem});
 			this.discList.Text = "Discussions";
 			// 
 			// joinItem
@@ -260,6 +270,19 @@ namespace lilySharp
 			this.verticalItem.Text = "Tile &Vertical";
 			this.verticalItem.Click += new System.EventHandler(this.verticalItem_Click);
 			// 
+			// helpItem
+			// 
+			this.helpItem.Index = 3;
+			this.helpItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+																					 this.diagConsoleItem});
+			this.helpItem.Text = "&Help";
+			// 
+			// diagConsoleItem
+			// 
+			this.diagConsoleItem.Index = 0;
+			this.diagConsoleItem.Text = "Diag Console";
+			this.diagConsoleItem.Click += new System.EventHandler(this.diagConsoleItem_Click);
+			// 
 			// statusBar
 			// 
 			this.statusBar.Location = new System.Drawing.Point(0, 543);
@@ -268,6 +291,7 @@ namespace lilySharp
 			this.statusBar.Size = new System.Drawing.Size(752, 22);
 			this.statusBar.TabIndex = 1;
 			this.statusBar.Text = "Not Connected";
+			this.statusBar.PanelClick += new System.Windows.Forms.StatusBarPanelClickEventHandler(this.statusBar_PanelClick);
 			// 
 			// toolBar1
 			// 
@@ -298,7 +322,7 @@ namespace lilySharp
 			// 
 			this.discBtn.ImageIndex = 0;
 			this.discBtn.Style = System.Windows.Forms.ToolBarButtonStyle.ToggleButton;
-			this.discBtn.ToolTipText = "Show Joined IDiscussions";
+			this.discBtn.ToolTipText = "Show Joined Discussions";
 			// 
 			// toolbarLst
 			// 
@@ -307,18 +331,16 @@ namespace lilySharp
 			this.toolbarLst.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("toolbarLst.ImageStream")));
 			this.toolbarLst.TransparentColor = System.Drawing.Color.Transparent;
 			// 
-			// helpItem
+			// menuItem4
 			// 
-			this.helpItem.Index = 3;
-			this.helpItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-																					 this.diagConsoleItem});
-			this.helpItem.Text = "&Help";
+			this.menuItem4.Index = 2;
+			this.menuItem4.Text = "-";
 			// 
-			// diagConsoleItem
+			// joinedItem
 			// 
-			this.diagConsoleItem.Index = 0;
-			this.diagConsoleItem.Text = "Diag Console";
-			this.diagConsoleItem.Click += new System.EventHandler(this.diagConsoleItem_Click);
+			this.joinedItem.Index = 3;
+			this.joinedItem.Text = "J&oined";
+			this.joinedItem.Click += new System.EventHandler(this.joinedItem_Click);
 			// 
 			// LilyParent
 			// 
@@ -331,7 +353,7 @@ namespace lilySharp
 			this.IsMdiContainer = true;
 			this.Menu = this.mainMenu1;
 			this.Name = "LilyParent";
-			this.Text = "LilySharp v0.53.1 Alpha";
+			this.Text = "LilySharp v0.60 Alpha";
 			this.Closing += new System.ComponentModel.CancelEventHandler(this.LilyParent_Closing);
 			this.ResumeLayout(false);
 
@@ -456,11 +478,6 @@ namespace lilySharp
 				console.MdiParent = this;
 				console.Show();
 			}
-			if(diag == null)
-			{
-				diag = new DiagConsole();
-				diag.MdiParent = this;
-			}
 		
 
 			/*
@@ -550,7 +567,7 @@ namespace lilySharp
 					}
 					else
 					{
-						LoginDlg login = new LoginDlg();
+						UserPassDlg login = new UserPassDlg();
 						if(login.ShowDialog() == DialogResult.OK)
 						{
 							outStream.WriteLine("%waterlogin RESPONSE=auth AUTHTYPE=plaintext LOGIN=" + login.UserName.Length + "=" + login.UserName + " PASSWORD=" + login.Password.Length + "=" + login.Password);
@@ -728,7 +745,7 @@ namespace lilySharp
 							/*
 							 * Private message
 							 */
-							if(recipient.GetType() == typeof(IUser))
+							if(recipient is IUser)
 							{
 								// Someone sent me a message
 								if(recipient == me)
@@ -833,13 +850,14 @@ namespace lilySharp
 						break;
 					case "destroy":
 						if(UpdateUser != null) UpdateUser(notify);
+						joinedDiscList.Remove(notify.Recipients[0] as IDiscussion);
 						database.Remove(notify.Recipients[0].Handle);
 						break;
 					case "retitle":
 						if(UpdateUser != null) UpdateUser(notify);
 						((IDiscussion)notify.Recipients[0]).Title = notify.Value;
 
-						if(notify.Recipients[0].GetType() == typeof(IDiscussion) && notify.Recipients[0].Window != null)
+						if(notify.Recipients[0] is IDiscussion && notify.Recipients[0].Window != null)
 						{
 							joinedDiscList.Remove(notify.Recipients[0] as IDiscussion);
 							joinedDiscList.Add(notify.Recipients[0] as IDiscussion);
@@ -847,6 +865,15 @@ namespace lilySharp
 						break;
 					case "ignore":
 					case "unignore":
+						if(UpdateUser != null) UpdateUser(notify);
+						break;
+					case "create":
+						if(notify.Source == me)
+						{
+							createDiscWindow(notify.Recipients[0].Handle);
+							joinedDiscList.Add(notify.Recipients[0] as IDiscussion);
+						}
+
 						if(UpdateUser != null) UpdateUser(notify);
 						break;
 					case "appoint":
@@ -1281,9 +1308,9 @@ namespace lilySharp
 					joinedDiscList.AllowClose = true;
 					foreach(Form window in this.MdiChildren)
 					{
-						if(window.GetType() != typeof(JoindDiscWnd))
+						if(!(window is JoindDiscWnd))
 						{
-							if(window.GetType() == typeof(DiagConsole))
+							if(window is DiagConsole)
 								((DiagConsole)window).AllowClose = true;
 							else
 								((LilyWindow)window).AllowClose = true;
@@ -1306,19 +1333,14 @@ namespace lilySharp
 		}
 
 		/// <summary>
-		/// Brings up the join discussion dialog box, and sends the server the join event
-		/// TODO: Make this a non-modal dialog using the ILeafCmd interface
+		/// Brings up the join discussion dialog box
 		/// </summary>
 		/// <param name="sender">Sender of the event</param>
 		/// <param name="e">Event arguments</param>
 		private void joinItem_Click(object sender, System.EventArgs e)
 		{
 			JoinDiscDlg joinDlg = new JoinDiscDlg(this);
-			if(joinDlg.ShowDialog() == DialogResult.OK)
-			{
-		        createDiscWindow(joinDlg.selectedDisc.Handle);
-				outStream.WriteLine("/join " + joinDlg.selectedDisc);
-			}
+			joinDlg.Show();
 		}
 
 		/// <summary>
@@ -1384,6 +1406,32 @@ namespace lilySharp
 		private void diagConsoleItem_Click(object sender, System.EventArgs e)
 		{
 			diag.Show();
+		}
+
+		private void statusBar_PanelClick(object sender, System.Windows.Forms.StatusBarPanelClickEventArgs e)
+		{
+			if(e.StatusBarPanel == msgPanel && e.Button == MouseButtons.Left && e.Clicks >= 2)
+			{
+				if(joinedDiscList.Visible)
+				{
+					joinedDiscList.Hide();
+					//discBtn.Pushed = false;
+				}
+				else
+				{
+					joinedDiscList.Show();
+					//discBtn.Pushed = true;
+				}
+			}
+		}
+
+		private void joinedItem_Click(object sender, System.EventArgs e)
+		{
+			if(!joinedDiscList.Visible)
+			{
+				joinedDiscList.Show();
+				//discBtn.Pushed = true;
+			}
 		}
 	}
 }

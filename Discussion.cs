@@ -13,10 +13,8 @@ namespace lilySharp
 	///
 	public class DiscussionWindow : LilyWindow, ILeafCmd
 	{
-		private System.Windows.Forms.ListBox userList;
 		private System.Windows.Forms.Splitter splitter1;
 		
-		private IDiscussion discussion;
 		private ToolTip blurbTip;
 		private IUser rightClickedUser;
 		private System.Windows.Forms.ContextMenu userListMenu;
@@ -25,6 +23,10 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem memoItem;
 		private System.Windows.Forms.MenuItem fingerItem;
 		private System.Windows.Forms.MenuItem pmItem;
+		private System.Windows.Forms.ListBox userList;
+		private System.Windows.Forms.MenuItem menuItem7;
+		private System.Windows.Forms.MenuItem ignoreItem;
+		private System.Windows.Forms.MenuItem notifySetItem;
 
 		private delegate void writeText(string text, Color color);
 		private delegate void showWindow();
@@ -50,11 +52,12 @@ namespace lilySharp
 			// TODO: Add any constructor code after InitializeComponent call
 			//
 
-			this.discussion = disc;
+			this.lilyObject = disc;
 			this.Text = disc.Name + " [ " + disc.Title + " ]";
 
 			blurbTip = new ToolTip();
 			allowClose = false;
+			prefix = '-';
 		}
 
 		/// <summary>
@@ -70,7 +73,7 @@ namespace lilySharp
 				}
 			}
 			
-			discussion.Window = null;
+			this.lilyObject.Window = null;
 			base.Dispose( disposing );
 			
 		}
@@ -82,53 +85,41 @@ namespace lilySharp
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.userList = new System.Windows.Forms.ListBox();
 			this.userListMenu = new System.Windows.Forms.ContextMenu();
 			this.infoItem = new System.Windows.Forms.MenuItem();
 			this.memoItem = new System.Windows.Forms.MenuItem();
 			this.fingerItem = new System.Windows.Forms.MenuItem();
+			this.menuItem7 = new System.Windows.Forms.MenuItem();
+			this.ignoreItem = new System.Windows.Forms.MenuItem();
+			this.notifySetItem = new System.Windows.Forms.MenuItem();
 			this.menuItem5 = new System.Windows.Forms.MenuItem();
 			this.pmItem = new System.Windows.Forms.MenuItem();
 			this.splitter1 = new System.Windows.Forms.Splitter();
+			this.userList = new System.Windows.Forms.ListBox();
 			this.panel1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// panel1
 			// 
 			this.panel1.Location = new System.Drawing.Point(0, 261);
-			this.panel1.Size = new System.Drawing.Size(472, 24);
+			this.panel1.Size = new System.Drawing.Size(496, 24);
 			this.panel1.Visible = true;
 			// 
 			// chatArea
 			// 
 			this.chatArea.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
-			this.chatArea.Size = new System.Drawing.Size(384, 261);
+			this.chatArea.Size = new System.Drawing.Size(408, 261);
 			this.chatArea.Visible = true;
-			this.chatArea.VisibleChanged += new System.EventHandler(this.chatArea_VisibleChanged);
 			// 
 			// sendBtn
 			// 
-			this.sendBtn.Location = new System.Drawing.Point(397, 0);
+			this.sendBtn.Location = new System.Drawing.Point(421, 0);
 			this.sendBtn.Visible = true;
 			// 
 			// userText
 			// 
-			this.userText.Size = new System.Drawing.Size(397, 20);
+			this.userText.Size = new System.Drawing.Size(421, 20);
 			this.userText.Visible = true;
-			// 
-			// userList
-			// 
-			this.userList.ContextMenu = this.userListMenu;
-			this.userList.Dock = System.Windows.Forms.DockStyle.Right;
-			this.userList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-			this.userList.HorizontalScrollbar = true;
-			this.userList.IntegralHeight = false;
-			this.userList.Location = new System.Drawing.Point(384, 0);
-			this.userList.Name = "userList";
-			this.userList.Size = new System.Drawing.Size(88, 261);
-			this.userList.TabIndex = 2;
-			this.userList.MouseMove += new System.Windows.Forms.MouseEventHandler(this.userList_MouseMove);
-			this.userList.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.userList_DrawItem);
 			// 
 			// userListMenu
 			// 
@@ -136,6 +127,9 @@ namespace lilySharp
 																						 this.infoItem,
 																						 this.memoItem,
 																						 this.fingerItem,
+																						 this.menuItem7,
+																						 this.ignoreItem,
+																						 this.notifySetItem,
 																						 this.menuItem5,
 																						 this.pmItem});
 			this.userListMenu.Popup += new System.EventHandler(this.userListMenu_Popup);
@@ -158,75 +152,73 @@ namespace lilySharp
 			this.fingerItem.Text = "Finger";
 			this.fingerItem.Click += new System.EventHandler(this.fingerItem_Click);
 			// 
+			// menuItem7
+			// 
+			this.menuItem7.Index = 3;
+			this.menuItem7.Text = "-";
+			// 
+			// ignoreItem
+			// 
+			this.ignoreItem.Index = 4;
+			this.ignoreItem.Text = "Ignore...";
+			// 
+			// notifySetItem
+			// 
+			this.notifySetItem.Index = 5;
+			this.notifySetItem.Text = "Notify Settings...";
+			// 
 			// menuItem5
 			// 
-			this.menuItem5.Index = 3;
+			this.menuItem5.Index = 6;
 			this.menuItem5.Text = "-";
 			// 
 			// pmItem
 			// 
-			this.pmItem.Index = 4;
+			this.pmItem.Index = 7;
 			this.pmItem.Text = "Private Message";
 			this.pmItem.Click += new System.EventHandler(this.pmItem_Click);
 			// 
 			// splitter1
 			// 
 			this.splitter1.Dock = System.Windows.Forms.DockStyle.Right;
-			this.splitter1.Location = new System.Drawing.Point(381, 0);
+			this.splitter1.Location = new System.Drawing.Point(405, 0);
 			this.splitter1.Name = "splitter1";
 			this.splitter1.Size = new System.Drawing.Size(3, 261);
 			this.splitter1.TabIndex = 4;
 			this.splitter1.TabStop = false;
 			// 
-			// IDiscussionWindow
+			// userList
+			// 
+			this.userList.ContextMenu = this.userListMenu;
+			this.userList.Dock = System.Windows.Forms.DockStyle.Right;
+			this.userList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+			this.userList.HorizontalScrollbar = true;
+			this.userList.IntegralHeight = false;
+			this.userList.Location = new System.Drawing.Point(408, 0);
+			this.userList.Name = "userList";
+			this.userList.Size = new System.Drawing.Size(88, 261);
+			this.userList.TabIndex = 2;
+			this.userList.MouseMove += new System.Windows.Forms.MouseEventHandler(this.userList_MouseMove);
+			this.userList.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.userList_DrawItem);
+			// 
+			// DiscussionWindow
 			// 
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-			this.ClientSize = new System.Drawing.Size(472, 285);
+			this.ClientSize = new System.Drawing.Size(496, 285);
 			this.Controls.AddRange(new System.Windows.Forms.Control[] {
 																		  this.splitter1,
 																		  this.chatArea,
 																		  this.userList,
 																		  this.panel1});
-			this.Name = "IDiscussionWindow";
-			this.Text = "IDiscussionWindow";
+			this.Name = "DiscussionWindow";
+			this.Text = "DiscussionWindow";
+			this.VisibleChanged += new System.EventHandler(this.DiscussionWindow_VisibleChanged);
 			this.panel1.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
 		#endregion
 
-		/// <summary>
-		/// Sends the message to the discussion
-		/// </summary>
-		/// <param name="sender">Sender of the event</param>
-		/// <param name="e">Event arguments</param>
-		protected override void sendBtn_Click(object sender, System.EventArgs e)
-		{
-			if(userText.Text.StartsWith("/"))
-			{
-				LeafMessage msg = new LeafMessage(userText.Text, "userCmd", this);
-				mdiParent.PostMessage(msg);
-
-				//	mdiParent.Out.WriteLine(userText.Text);
-			}
-				/*
-				 * TODO: Check that the sender is a valid user name.  If not, just post the message
-				 */
-			else if(Regex.Match(userText.Text, @"^[^;:]*[;:]").Success)
-			{
-				LeafMessage msg = new LeafMessage(userText.Text, "msgToDest", this);
-				mdiParent.PostMessage(msg);
-			}
-			else if(userText.Text.ToUpper() == "&RTF")
-				Post(chatArea.Rtf);
-			else
-			{
-				// Need to replace spaces in the name with underscores, or else lily will think the line ends early
-				mdiParent.Out.WriteLine(discussion.Name.Replace(' ', '_') + ";" + userText.Text);
-			}
-			
-			userText.Clear();
-		}
 
 		/// <summary>
 		/// Displays the window if necessary, then displays the message sent to the discussion.
@@ -274,7 +266,8 @@ namespace lilySharp
 		{
 			foreach(string member in members)
 			{
-				userList.Items.Add( mdiParent.Database[member]);
+				if(!userList.Items.Contains(mdiParent.Database[member]))
+					userList.Items.Add( mdiParent.Database[member]);
 			}
 			userList.Sorted = true;
 		}
@@ -298,27 +291,34 @@ namespace lilySharp
 
 			e.DrawBackground();
 
-			Brush myBrush = Brushes.Orange;
+			SolidBrush myBrush = new SolidBrush(Color.Orange);
 			if(e.Index != -1)
 			{
 				switch( ((IUser)userList.Items[e.Index]).State)
 				{
 					case States.Here:
-						myBrush = Brushes.Black;
+						myBrush = new SolidBrush(Color.Black);
 						break;
 					case States.Away:
-						myBrush = Brushes.Maroon;
+						myBrush = new SolidBrush(Color.Maroon);
 						break;
 					case States.Detached:
-						myBrush = Brushes.Gray;
+						myBrush = new SolidBrush(Color.Gray);
 						break;
 					case States.Disconnected:
-						myBrush = Brushes.Red;
+						myBrush = new SolidBrush(Color.Red);
 						break;
 					default:
 						break;
 				}
 			}
+
+			if( (e.State & DrawItemState.Selected) !=0)
+			{
+				myBrush.Color = Color.FromArgb(myBrush.Color.ToArgb() | userList.BackColor.ToArgb());
+			}
+
+			// Handle scrollbar
 			if(e.Graphics.MeasureString(userList.Items[e.Index].ToString(), e.Font).Width > userList.HorizontalExtent) 
 				userList.HorizontalExtent = (int)e.Graphics.MeasureString(userList.Items[e.Index].ToString(), e.Font).Width;
             
@@ -349,7 +349,7 @@ namespace lilySharp
 		/// Handles status changes
 		/// </summary>
 		/// <param name="notify">SLCP notify event</param>
-		protected override void updateUser(NotifyEvent notify)
+		protected override void onNotify(NotifyEvent notify)
 		{
 			if( userList.Items.Contains( notify.Source) && notify.Notify)
 			{
@@ -378,7 +378,7 @@ namespace lilySharp
 						foreach(ILilyObject recip in notify.Recipients)
 						{
 							// See if this discussion is the one being quit
-							if(recip == this.discussion)
+							if(recip == this.lilyObject)
 							{
 								post(notify.Source + " has quit\n", Color.Maroon);
 								userList.Items.Remove(notify.Source);
@@ -387,7 +387,7 @@ namespace lilySharp
 								if(notify.Source == mdiParent.Me)
 								{
 									allowClose = true;
-									discussion.Window = null;
+									this.lilyObject.Window = null;
 
 										// If the window is open, keep it open so the user can still review
 									if(Visible)
@@ -418,12 +418,12 @@ namespace lilySharp
 						post(notify.Source.Name + " created " + notify.Recipients[0] + "\n", Color.Maroon);
 						break;
 					case "destroy":
-						if(notify.Recipients[0] == this.discussion)
+						if(notify.Recipients[0] == this.lilyObject)
 						{
 							post("*** This discussion has been destroyed by " + notify.Source + " ***", Color.Red);
 							sendBtn.Enabled = false;
 							this.allowClose = true;
-							mdiParent.Database[discussion.Handle] = null;
+							mdiParent.Database[this.lilyObject.Handle] = null;
 						}
 						else
 						{
@@ -431,15 +431,15 @@ namespace lilySharp
 						}
 						break;
 					case "join":
-						if(notify.Recipients[0] == this.discussion)
+						if(notify.Recipients[0] == this.lilyObject)
 						{
 							userList.Sorted = true;
 							post(notify.Source.Name + " has joined\n", Color.Maroon);
 						}
 						break;
 					case "retitle":
-						if(notify.Recipients[0] == this.discussion)
-							this.Text = discussion.Name + " [ " + notify.Value + " ]";
+						if(notify.Recipients[0] == this.lilyObject)
+							this.Text = this.lilyObject.Name + " [ " + notify.Value + " ]";
 
                         post(notify.Source.Name + " has changed the title of " + notify.Recipients[0].Name + " to " + notify.Value + "\n", Color.Maroon);
 						break;
@@ -471,27 +471,6 @@ namespace lilySharp
 			
 			if(userList.Items.Contains(notify.Source))
 				userList.Invalidate();
-		}
-
-		public void ProcessResponse(LeafMessage msg)
-		{
-			if(msg.Tag == "userCmd")
-			{
-			
-				chatArea.SelectionFont = new Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
-				chatArea.SelectionColor = Color.Gray;
-
-				chatArea.AppendText(msg.Response);
-
-				chatArea.SelectionFont = new Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
-				chatArea.SelectionColor = Color.Black;
-			}
-			else if(msg.Tag == "msgToDest")
-			{
-				chatArea.SelectionColor = Color.DarkGray;
-				chatArea.AppendText(msg.Response);
-			}
-
 		}
 
 		/// <summary>
@@ -558,7 +537,8 @@ namespace lilySharp
 		/// <param name="e">Event arguments</param>
 		private void fingerItem_Click(object sender, System.EventArgs e)
 		{
-			MessageBox.Show("Implement me!");
+			FingerDlg finger = new FingerDlg(mdiParent, rightClickedUser);
+			finger.Show();
 		}
 
 		/// <summary>
@@ -571,15 +551,18 @@ namespace lilySharp
 			mdiParent.createPM(rightClickedUser);
 		}
 
-		/// <summary>
-		/// Indicates all unseen messages have been shown
-		/// </summary>
-		/// <param name="sender">Sender of the event</param>
-		/// <param name="e">Event arguments</param>
-		private void chatArea_VisibleChanged(object sender, System.EventArgs e)
+		private void publicIgnoreItem_Click(object sender, System.EventArgs e)
 		{
-			if(Visible) mdiParent.JoinedDiscList.ClearMsg(this.discussion);
+        }
+
+		private void privateIgnoreItem_Click(object sender, System.EventArgs e)
+		{
 		}
-	
+
+		private void DiscussionWindow_VisibleChanged(object sender, System.EventArgs e)
+		{
+			if(Visible) mdiParent.JoinedDiscList.ClearMsg(this.lilyObject as IDiscussion);
+		}
+
 	}
 }

@@ -181,6 +181,16 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "FingerDlg.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "FingerDlg.resx"
+                    DependentUpon = "FingerDlg.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
                     RelPath = "HashDb.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -196,13 +206,13 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "JoinDisc.cs"
+                    RelPath = "JoinDiscDlg.cs"
                     SubType = "Form"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "JoinDisc.resx"
-                    DependentUpon = "JoinDisc.cs"
+                    RelPath = "JoinDiscDlg.resx"
+                    DependentUpon = "JoinDiscDlg.cs"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
@@ -261,13 +271,13 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
-                    RelPath = "LoginDlg.cs"
+                    RelPath = "MaxLineDlg.cs"
                     SubType = "Form"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "LoginDlg.resx"
-                    DependentUpon = "LoginDlg.cs"
+                    RelPath = "MaxLineDlg.resx"
+                    DependentUpon = "MaxLineDlg.cs"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
@@ -302,6 +312,16 @@
                 <File
                     RelPath = "PrivateMsg.resx"
                     DependentUpon = "PrivateMsg.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "UserPassDlg.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "UserPassDlg.resx"
+                    DependentUpon = "UserPassDlg.cs"
                     BuildAction = "EmbeddedResource"
                 />
                 <File

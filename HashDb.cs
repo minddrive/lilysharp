@@ -22,29 +22,7 @@ namespace lilySharp
 
 		public ILilyObject this [string tag]
 		{
-			get
-			{
-				// If the tag is an object ID, we can return the value easily
-				if(tag[0] == '#')
-				{
-					try
-					{
-						int.Parse(tag.Substring(1));
-						return hash[tag] as ILilyObject;
-					}
-					catch(FormatException)
-					{}
-				}
-
-				// If the tag is not an object ID, it must me a name.  Find it.
-				foreach(DictionaryEntry entry in hash)
-				{
-					if(entry.Value.ToString() == tag)
-						return entry.Value as ILilyObject;
-				}
-				
-				return null;
-			}
+			get	{ return hash[tag] as ILilyObject;}
 			set{ hash[tag] = value;}
 		}
 
@@ -52,7 +30,7 @@ namespace lilySharp
 		{
 			get
 			{
-				if(obj.GetType() == typeof(string))
+				if(obj is string)
 					return this[obj as string];
 				else
 					throw new ArgumentException("Database Indexer must be a string");
@@ -60,7 +38,7 @@ namespace lilySharp
 			
 			set
 			{
-				if(obj.GetType() == typeof(string))
+				if(obj is string)
 					this[obj as string] = value;
 				else
 					throw new ArgumentException("Database Indexer must be a string");
@@ -69,33 +47,13 @@ namespace lilySharp
 
 		public void Remove(string tag)
 		{
-			// If the tag is an object ID, we can return the value easily
-			if(tag[0] == '#')
-			{
-				try
-				{
-					int.Parse(tag.Substring(1));
-					hash.Remove(tag);
-					return;
-				}
-				catch(FormatException)
-				{}
-			}
-
-			// If the tag is not an object ID, it must me a name.  Find it.
-			foreach(DictionaryEntry entry in hash)
-			{
-				if(entry.Value.ToString() == tag)
-				{
-					hash.Remove(entry.Key);
-					return;
-				}
-			}
+			hash.Remove(tag);
 		}
 
 		public IEnumerator GetEnumerator()
 		{
 			return hash.GetEnumerator();
 		}
+
 	}
 }

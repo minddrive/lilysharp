@@ -77,13 +77,13 @@ namespace lilySharp
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.discList = new System.Windows.Forms.ListView();
 			this.discContextMenu = new System.Windows.Forms.ContextMenu();
+			this.autosortItem = new System.Windows.Forms.MenuItem();
+			this.menuItem1 = new System.Windows.Forms.MenuItem();
 			this.infoItem = new System.Windows.Forms.MenuItem();
 			this.memoItem = new System.Windows.Forms.MenuItem();
 			this.menuItem3 = new System.Windows.Forms.MenuItem();
 			this.quitItem = new System.Windows.Forms.MenuItem();
 			this.listViewImgList = new System.Windows.Forms.ImageList(this.components);
-			this.menuItem1 = new System.Windows.Forms.MenuItem();
-			this.autosortItem = new System.Windows.Forms.MenuItem();
 			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -104,7 +104,7 @@ namespace lilySharp
 			this.groupBox1.Size = new System.Drawing.Size(184, 325);
 			this.groupBox1.TabIndex = 1;
 			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "IDiscussions";
+			this.groupBox1.Text = "Discussions";
 			// 
 			// discList
 			// 
@@ -132,6 +132,19 @@ namespace lilySharp
 																							this.menuItem3,
 																							this.quitItem});
 			this.discContextMenu.Popup += new System.EventHandler(this.discContextMenu_Popup);
+			// 
+			// autosortItem
+			// 
+			this.autosortItem.Checked = true;
+			this.autosortItem.Index = 0;
+			this.autosortItem.RadioCheck = true;
+			this.autosortItem.Text = "New Msgs on Top";
+			this.autosortItem.Click += new System.EventHandler(this.autosortItem_Click);
+			// 
+			// menuItem1
+			// 
+			this.menuItem1.Index = 1;
+			this.menuItem1.Text = "-";
 			// 
 			// infoItem
 			// 
@@ -163,19 +176,6 @@ namespace lilySharp
 			this.listViewImgList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("listViewImgList.ImageStream")));
 			this.listViewImgList.TransparentColor = System.Drawing.Color.Transparent;
 			// 
-			// menuItem1
-			// 
-			this.menuItem1.Index = 1;
-			this.menuItem1.Text = "-";
-			// 
-			// autosortItem
-			// 
-			this.autosortItem.Checked = true;
-			this.autosortItem.Index = 0;
-			this.autosortItem.RadioCheck = true;
-			this.autosortItem.Text = "New Msgs on Top";
-			this.autosortItem.Click += new System.EventHandler(this.autosortItem_Click);
-			// 
 			// JoindDiscWnd
 			// 
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
@@ -184,7 +184,7 @@ namespace lilySharp
 																		  this.groupBox1,
 																		  this.panel1});
 			this.Name = "JoindDiscWnd";
-			this.Text = "Joined IDiscussions";
+			this.Text = "Joined Discussions";
 			this.Closing += new System.ComponentModel.CancelEventHandler(this.JoindDiscWnd_Closing);
 			this.groupBox1.ResumeLayout(false);
 			this.ResumeLayout(false);
@@ -198,6 +198,8 @@ namespace lilySharp
 		/// <param name="disc">The discussion to add to the list</param>
 		public void Add(IDiscussion disc)
 		{
+			if(discs.Contains(disc)) return;
+
 			ListViewItem discRow = new ListViewItem(disc.Name);
 			discRow.SubItems.Add("0");
 			discList.Items.Add(discRow);
@@ -217,9 +219,11 @@ namespace lilySharp
 				if(item.Text == disc.Name)
 				{
 					discList.Items.Remove(item);
-					return;
+					break;
 				}
 			}
+
+			setTooltip();
 		}
 		/// <summary>
 		/// Increase the number of unread messages in the given discussion by one
@@ -249,16 +253,7 @@ namespace lilySharp
 				notifyPanel.Icon = new Icon(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("lilySharp.message.ico"));
 
 			//Update the tooltip
-			notifyPanel.ToolTipText = "";
-			for(int i = 0; i < discList.Items.Count; i++)
-			{
-				if(discList.Items[i].SubItems[1].Text != "0")
-				{
-					if(notifyPanel.ToolTipText != "")
-						notifyPanel.ToolTipText += "\n";
-					notifyPanel.ToolTipText += discs[i].ToString() + ": " +discList.Items[i].SubItems[1].Text;
-				}
-			}
+			setTooltip();
 
 			//Sort by message count if desired
 			if(autosortItem.Checked && ((DiscListItemComparer)discList.ListViewItemSorter).Collumn != 1)
@@ -286,7 +281,9 @@ namespace lilySharp
 					item.ImageIndex = -1;
 				}
 			}
-			discList.Sort();
+			
+			//discList.Sort();
+			setTooltip();
 
 			// Update the new message area
 			if(msgCount == 0)
@@ -323,6 +320,32 @@ namespace lilySharp
 				return null;
 			}
 		}
+
+		public new void Show()
+		{
+			((LilyParent)MdiParent).DiscBtn.Pushed = true;
+			base.Show();
+		}
+
+		public new void Hide()
+		{
+			((LilyParent)MdiParent).DiscBtn.Pushed = false;
+			base.Hide();
+		}
+
+		private void setTooltip()
+		{
+			notifyPanel.ToolTipText = "";
+			for(int i = 0; i < discList.Items.Count; i++)
+			{
+				if(discList.Items[i].SubItems[1].Text != "0")
+				{
+					if(notifyPanel.ToolTipText != "")
+						notifyPanel.ToolTipText += "\n";
+					notifyPanel.ToolTipText += discs[i].ToString() + ": " +discList.Items[i].SubItems[1].Text;
+				}
+			}
+		}
 		/// <summary>
 		/// Hide the window, instead of closing it.  We need this window to keep track of messages at all times
 		/// </summary>
@@ -347,7 +370,6 @@ namespace lilySharp
 		{
 			selectedDisc.Window.Show();
 		}
-
 	
 		/// <summary>
 		/// Sort the collumns
@@ -489,6 +511,14 @@ namespace lilySharp
 		/// </remarks>
 		public int Compare(object x, object y)
 		{
+			/*
+			if(x == null && y != null)
+				return sortModifier;
+			else if(y == null && x != null)
+				return -sortModifier;
+			else if(y == null && x == null)
+				return 0;
+*/
 			if(itemType == ItemType.String)
 				return String.Compare( ((ListViewItem)x).SubItems[col].Text, ((ListViewItem)y).SubItems[col].Text)*sortModifier;
 			else if(itemType == ItemType.Number)

@@ -183,7 +183,7 @@ namespace lilySharp
 				Memo memo;
 				foreach(string str in msg.Response.Split(new char[] {'\n'}))
 				{
-					Match match = Regex.Match(str, @"^(\d+)?\s*(.*?)\s+(\d+)\s+(\w+)\s+(...) (...) (..) (..:..:..) (....) (...)$");
+					Match match = Regex.Match(str, @"^(\d+\s+)?(.*?)\s+(\d+)\s+(\w+)\s+(...) (...) (..) (..:..:..) (....) (...)$");
 					if(match.Success)
 					{
 						memo = new Memo();

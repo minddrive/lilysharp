@@ -22,8 +22,11 @@ namespace lilySharp
 		private System.Windows.Forms.CheckBox waterBox;
 		private System.Windows.Forms.CheckBox otherBox;
 		public bool AllowClose;
+		private int lineCount;
+		private int maxLines;
 		private System.Windows.Forms.ContextMenu msgAreaMenu;
-		private System.Windows.Forms.MenuItem menuItem1;
+		private System.Windows.Forms.MenuItem clearItem;
+		private System.Windows.Forms.MenuItem lineLimitItem;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -39,6 +42,8 @@ namespace lilySharp
 			//
 			// TODO: Add any constructor code after InitializeComponent call
 			//
+			lineCount = 0;
+			maxLines = 1000;
 		}
 
 		/// <summary>
@@ -64,17 +69,18 @@ namespace lilySharp
 		private void InitializeComponent()
 		{
 			this.panel1 = new System.Windows.Forms.Panel();
-			this.msgArea = new System.Windows.Forms.RichTextBox();
-			this.userBox = new System.Windows.Forms.CheckBox();
-			this.discBox = new System.Windows.Forms.CheckBox();
-			this.dataBox = new System.Windows.Forms.CheckBox();
-			this.groupBox = new System.Windows.Forms.CheckBox();
-			this.notifyBox = new System.Windows.Forms.CheckBox();
-			this.commandBox = new System.Windows.Forms.CheckBox();
-			this.waterBox = new System.Windows.Forms.CheckBox();
 			this.otherBox = new System.Windows.Forms.CheckBox();
+			this.waterBox = new System.Windows.Forms.CheckBox();
+			this.commandBox = new System.Windows.Forms.CheckBox();
+			this.notifyBox = new System.Windows.Forms.CheckBox();
+			this.groupBox = new System.Windows.Forms.CheckBox();
+			this.dataBox = new System.Windows.Forms.CheckBox();
+			this.discBox = new System.Windows.Forms.CheckBox();
+			this.userBox = new System.Windows.Forms.CheckBox();
+			this.msgArea = new System.Windows.Forms.RichTextBox();
 			this.msgAreaMenu = new System.Windows.Forms.ContextMenu();
-			this.menuItem1 = new System.Windows.Forms.MenuItem();
+			this.clearItem = new System.Windows.Forms.MenuItem();
+			this.lineLimitItem = new System.Windows.Forms.MenuItem();
 			this.panel1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -95,75 +101,14 @@ namespace lilySharp
 			this.panel1.Size = new System.Drawing.Size(456, 72);
 			this.panel1.TabIndex = 0;
 			// 
-			// msgArea
+			// otherBox
 			// 
-			this.msgArea.ContextMenu = this.msgAreaMenu;
-			this.msgArea.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.msgArea.Name = "msgArea";
-			this.msgArea.ReadOnly = true;
-			this.msgArea.Size = new System.Drawing.Size(456, 277);
-			this.msgArea.TabIndex = 1;
-			this.msgArea.Text = "";
-			// 
-			// userBox
-			// 
-			this.userBox.Checked = true;
-			this.userBox.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.userBox.Location = new System.Drawing.Point(8, 8);
-			this.userBox.Name = "userBox";
-			this.userBox.Size = new System.Drawing.Size(72, 24);
-			this.userBox.TabIndex = 0;
-			this.userBox.Text = "%USER";
-			// 
-			// discBox
-			// 
-			this.discBox.Checked = true;
-			this.discBox.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.discBox.Location = new System.Drawing.Point(8, 40);
-			this.discBox.Name = "discBox";
-			this.discBox.Size = new System.Drawing.Size(72, 24);
-			this.discBox.TabIndex = 1;
-			this.discBox.Text = "%DISC";
-			// 
-			// dataBox
-			// 
-			this.dataBox.Checked = true;
-			this.dataBox.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.dataBox.Location = new System.Drawing.Point(96, 8);
-			this.dataBox.Name = "dataBox";
-			this.dataBox.Size = new System.Drawing.Size(80, 24);
-			this.dataBox.TabIndex = 2;
-			this.dataBox.Text = "%DATA";
-			// 
-			// groupBox
-			// 
-			this.groupBox.Checked = true;
-			this.groupBox.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.groupBox.Location = new System.Drawing.Point(96, 40);
-			this.groupBox.Name = "groupBox";
-			this.groupBox.Size = new System.Drawing.Size(80, 24);
-			this.groupBox.TabIndex = 3;
-			this.groupBox.Text = "%GROUP";
-			// 
-			// notifyBox
-			// 
-			this.notifyBox.Checked = true;
-			this.notifyBox.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.notifyBox.Location = new System.Drawing.Point(192, 8);
-			this.notifyBox.Name = "notifyBox";
-			this.notifyBox.Size = new System.Drawing.Size(80, 24);
-			this.notifyBox.TabIndex = 4;
-			this.notifyBox.Text = "%NOTIFY";
-			// 
-			// commandBox
-			// 
-			this.commandBox.Checked = true;
-			this.commandBox.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.commandBox.Location = new System.Drawing.Point(192, 40);
-			this.commandBox.Name = "commandBox";
-			this.commandBox.Size = new System.Drawing.Size(80, 24);
-			this.commandBox.TabIndex = 5;
-			this.commandBox.Text = "Command";
+			this.otherBox.Checked = true;
+			this.otherBox.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.otherBox.Location = new System.Drawing.Point(280, 40);
+			this.otherBox.Name = "otherBox";
+			this.otherBox.TabIndex = 7;
+			this.otherBox.Text = "Other";
 			// 
 			// waterBox
 			// 
@@ -175,25 +120,95 @@ namespace lilySharp
 			this.waterBox.TabIndex = 6;
 			this.waterBox.Text = "%WATERLOGIN";
 			// 
-			// otherBox
+			// commandBox
 			// 
-			this.otherBox.Checked = true;
-			this.otherBox.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.otherBox.Location = new System.Drawing.Point(280, 40);
-			this.otherBox.Name = "otherBox";
-			this.otherBox.TabIndex = 7;
-			this.otherBox.Text = "Other";
+			this.commandBox.Checked = true;
+			this.commandBox.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.commandBox.Location = new System.Drawing.Point(192, 40);
+			this.commandBox.Name = "commandBox";
+			this.commandBox.Size = new System.Drawing.Size(80, 24);
+			this.commandBox.TabIndex = 5;
+			this.commandBox.Text = "Command";
+			// 
+			// notifyBox
+			// 
+			this.notifyBox.Checked = true;
+			this.notifyBox.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.notifyBox.Location = new System.Drawing.Point(192, 8);
+			this.notifyBox.Name = "notifyBox";
+			this.notifyBox.Size = new System.Drawing.Size(80, 24);
+			this.notifyBox.TabIndex = 4;
+			this.notifyBox.Text = "%NOTIFY";
+			// 
+			// groupBox
+			// 
+			this.groupBox.Checked = true;
+			this.groupBox.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.groupBox.Location = new System.Drawing.Point(96, 40);
+			this.groupBox.Name = "groupBox";
+			this.groupBox.Size = new System.Drawing.Size(80, 24);
+			this.groupBox.TabIndex = 3;
+			this.groupBox.Text = "%GROUP";
+			// 
+			// dataBox
+			// 
+			this.dataBox.Checked = true;
+			this.dataBox.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.dataBox.Location = new System.Drawing.Point(96, 8);
+			this.dataBox.Name = "dataBox";
+			this.dataBox.Size = new System.Drawing.Size(80, 24);
+			this.dataBox.TabIndex = 2;
+			this.dataBox.Text = "%DATA";
+			// 
+			// discBox
+			// 
+			this.discBox.Checked = true;
+			this.discBox.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.discBox.Location = new System.Drawing.Point(8, 40);
+			this.discBox.Name = "discBox";
+			this.discBox.Size = new System.Drawing.Size(72, 24);
+			this.discBox.TabIndex = 1;
+			this.discBox.Text = "%DISC";
+			// 
+			// userBox
+			// 
+			this.userBox.Checked = true;
+			this.userBox.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.userBox.Location = new System.Drawing.Point(8, 8);
+			this.userBox.Name = "userBox";
+			this.userBox.Size = new System.Drawing.Size(72, 24);
+			this.userBox.TabIndex = 0;
+			this.userBox.Text = "%USER";
+			// 
+			// msgArea
+			// 
+			this.msgArea.ContextMenu = this.msgAreaMenu;
+			this.msgArea.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.msgArea.HideSelection = false;
+			this.msgArea.Name = "msgArea";
+			this.msgArea.ReadOnly = true;
+			this.msgArea.Size = new System.Drawing.Size(456, 277);
+			this.msgArea.TabIndex = 1;
+			this.msgArea.Text = "";
+			this.msgArea.WordWrap = false;
 			// 
 			// msgAreaMenu
 			// 
 			this.msgAreaMenu.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-																						this.menuItem1});
+																						this.clearItem,
+																						this.lineLimitItem});
 			// 
-			// menuItem1
+			// clearItem
 			// 
-			this.menuItem1.Index = 0;
-			this.menuItem1.Text = "Clear";
-			this.menuItem1.Click += new System.EventHandler(this.menuItem1_Click);
+			this.clearItem.Index = 0;
+			this.clearItem.Text = "Clear";
+			this.clearItem.Click += new System.EventHandler(this.clearItem_Click);
+			// 
+			// lineLimitItem
+			// 
+			this.lineLimitItem.Index = 1;
+			this.lineLimitItem.Text = "Line Limit";
+			this.lineLimitItem.Click += new System.EventHandler(this.lineLimitItem_Click);
 			// 
 			// DiagConsole
 			// 
@@ -203,7 +218,7 @@ namespace lilySharp
 																		  this.msgArea,
 																		  this.panel1});
 			this.Name = "DiagConsole";
-			this.Text = "DiagConsole";
+			this.Text = "Diagnostic Console";
 			this.Closing += new System.ComponentModel.CancelEventHandler(this.DiagConsole_Closing);
 			this.panel1.ResumeLayout(false);
 			this.ResumeLayout(false);
@@ -255,6 +270,11 @@ namespace lilySharp
 					break;
 			}
 
+			if(lineCount < maxLines && maxLines > 0)
+				lineCount++;
+			else
+				msgArea.Text = msgArea.Text.Substring(msgArea.Text.IndexOf("\n") + 1);
+					
 			msgArea.AppendText(msg + '\n');
 		}
 
@@ -267,9 +287,34 @@ namespace lilySharp
 			}
 		}
 
-		private void menuItem1_Click(object sender, System.EventArgs e)
+		private void clearItem_Click(object sender, System.EventArgs e)
 		{
 			msgArea.Clear();
+			lineCount = 0;
+		}
+
+		private void lineLimitItem_Click(object sender, System.EventArgs e)
+		{
+			MaxLineDlg maxDlg = new MaxLineDlg(maxLines);
+			if(maxDlg.ShowDialog() == DialogResult.OK)
+			{
+				maxLines = maxDlg.Limit;
+
+				if(lineCount > maxLines)
+				{
+					int diff = lineCount - maxLines;
+					
+					int index = 0;
+					for(int i = 0; i < diff; i++)
+					{
+						index = msgArea.Text.IndexOf('\n',index);
+						index++;
+					}
+					
+					msgArea.Text = msgArea.Text.Substring(index);
+				}
+
+			}
 		}
 	}
 }

@@ -10,13 +10,12 @@ namespace lilySharp
 	/// <summary>
 	/// Dialog prompting for the username and password if the inital ones are invalid
 	/// </summary>
-	public class LoginDlg : System.Windows.Forms.Form
+	public class UserPassDlg : System.Windows.Forms.Form
 	{
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.TextBox userName;
 		private System.Windows.Forms.TextBox password;
-		private System.Windows.Forms.GroupBox groupBox2;
 		private System.Windows.Forms.Button cancelBtn;
 		private System.Windows.Forms.Button okBtn;
 
@@ -29,7 +28,7 @@ namespace lilySharp
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		public LoginDlg()
+		public UserPassDlg()
 		{
 			//
 			// Required for Windows Form Designer support
@@ -68,15 +67,13 @@ namespace lilySharp
 			this.label2 = new System.Windows.Forms.Label();
 			this.userName = new System.Windows.Forms.TextBox();
 			this.password = new System.Windows.Forms.TextBox();
-			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this.cancelBtn = new System.Windows.Forms.Button();
 			this.okBtn = new System.Windows.Forms.Button();
-			this.groupBox2.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// label1
 			// 
-			this.label1.Location = new System.Drawing.Point(16, 32);
+			this.label1.Location = new System.Drawing.Point(8, 8);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(64, 23);
 			this.label1.TabIndex = 0;
@@ -84,7 +81,7 @@ namespace lilySharp
 			// 
 			// label2
 			// 
-			this.label2.Location = new System.Drawing.Point(16, 72);
+			this.label2.Location = new System.Drawing.Point(8, 48);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(56, 23);
 			this.label2.TabIndex = 1;
@@ -92,7 +89,7 @@ namespace lilySharp
 			// 
 			// userName
 			// 
-			this.userName.Location = new System.Drawing.Point(80, 32);
+			this.userName.Location = new System.Drawing.Point(72, 8);
 			this.userName.Name = "userName";
 			this.userName.Size = new System.Drawing.Size(152, 20);
 			this.userName.TabIndex = 2;
@@ -100,31 +97,17 @@ namespace lilySharp
 			// 
 			// password
 			// 
-			this.password.Location = new System.Drawing.Point(80, 72);
+			this.password.Location = new System.Drawing.Point(72, 48);
 			this.password.Name = "password";
 			this.password.PasswordChar = '*';
 			this.password.Size = new System.Drawing.Size(152, 20);
 			this.password.TabIndex = 3;
 			this.password.Text = "";
 			// 
-			// groupBox2
-			// 
-			this.groupBox2.Controls.AddRange(new System.Windows.Forms.Control[] {
-																					this.password,
-																					this.userName,
-																					this.label1,
-																					this.label2});
-			this.groupBox2.Location = new System.Drawing.Point(8, 16);
-			this.groupBox2.Name = "groupBox2";
-			this.groupBox2.Size = new System.Drawing.Size(264, 112);
-			this.groupBox2.TabIndex = 9;
-			this.groupBox2.TabStop = false;
-			this.groupBox2.Text = "IUser Information";
-			// 
 			// cancelBtn
 			// 
 			this.cancelBtn.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.cancelBtn.Location = new System.Drawing.Point(192, 136);
+			this.cancelBtn.Location = new System.Drawing.Point(152, 88);
 			this.cancelBtn.Name = "cancelBtn";
 			this.cancelBtn.TabIndex = 7;
 			this.cancelBtn.Text = "Cancel";
@@ -132,22 +115,24 @@ namespace lilySharp
 			// okBtn
 			// 
 			this.okBtn.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.okBtn.Location = new System.Drawing.Point(96, 136);
+			this.okBtn.Location = new System.Drawing.Point(56, 88);
 			this.okBtn.Name = "okBtn";
 			this.okBtn.TabIndex = 5;
 			this.okBtn.Text = "OK";
 			// 
-			// LoginDlg
+			// UserPassDlg
 			// 
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-			this.ClientSize = new System.Drawing.Size(296, 173);
+			this.ClientSize = new System.Drawing.Size(248, 125);
 			this.Controls.AddRange(new System.Windows.Forms.Control[] {
-																		  this.groupBox2,
 																		  this.cancelBtn,
-																		  this.okBtn});
-			this.Name = "LoginDlg";
+																		  this.okBtn,
+																		  this.userName,
+																		  this.label1,
+																		  this.label2,
+																		  this.password});
+			this.Name = "UserPassDlg";
 			this.Text = "Login";
-			this.groupBox2.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
