@@ -27,6 +27,11 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem menuItem7;
 		private System.Windows.Forms.MenuItem ignoreItem;
 		private System.Windows.Forms.MenuItem notifySetItem;
+		private System.Windows.Forms.MenuItem publicItem;
+		private System.Windows.Forms.MenuItem privateItem;
+		private System.Windows.Forms.MenuItem allIgnoreItem;
+		private System.Windows.Forms.MenuItem ignoreExcepItem;
+		private System.Windows.Forms.MenuItem addIgnoreExItem;
 
 		private delegate void writeText(string text, Color color);
 		private delegate void showWindow();
@@ -91,6 +96,11 @@ namespace lilySharp
 			this.fingerItem = new System.Windows.Forms.MenuItem();
 			this.menuItem7 = new System.Windows.Forms.MenuItem();
 			this.ignoreItem = new System.Windows.Forms.MenuItem();
+			this.publicItem = new System.Windows.Forms.MenuItem();
+			this.privateItem = new System.Windows.Forms.MenuItem();
+			this.allIgnoreItem = new System.Windows.Forms.MenuItem();
+			this.ignoreExcepItem = new System.Windows.Forms.MenuItem();
+			this.addIgnoreExItem = new System.Windows.Forms.MenuItem();
 			this.notifySetItem = new System.Windows.Forms.MenuItem();
 			this.menuItem5 = new System.Windows.Forms.MenuItem();
 			this.pmItem = new System.Windows.Forms.MenuItem();
@@ -160,7 +170,43 @@ namespace lilySharp
 			// ignoreItem
 			// 
 			this.ignoreItem.Index = 4;
-			this.ignoreItem.Text = "Ignore...";
+			this.ignoreItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+																					   this.publicItem,
+																					   this.privateItem});
+			this.ignoreItem.Text = "Ignore";
+			// 
+			// publicItem
+			// 
+			this.publicItem.Index = 0;
+			this.publicItem.Text = "Public";
+			this.publicItem.Click += new System.EventHandler(this.publicItem_Click);
+			// 
+			// privateItem
+			// 
+			this.privateItem.Index = 1;
+			this.privateItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+																						this.allIgnoreItem,
+																						this.ignoreExcepItem});
+			this.privateItem.Text = "Private";
+			// 
+			// allIgnoreItem
+			// 
+			this.allIgnoreItem.Index = 0;
+			this.allIgnoreItem.Text = "All";
+			this.allIgnoreItem.Click += new System.EventHandler(this.allIgnoreItem_Click);
+			// 
+			// ignoreExcepItem
+			// 
+			this.ignoreExcepItem.Index = 1;
+			this.ignoreExcepItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+																							this.addIgnoreExItem});
+			this.ignoreExcepItem.Text = "Exceptions";
+			// 
+			// addIgnoreExItem
+			// 
+			this.addIgnoreExItem.Index = 0;
+			this.addIgnoreExItem.Text = "Add...";
+			this.addIgnoreExItem.Click += new System.EventHandler(this.addIgnoreExItem_Click);
 			// 
 			// notifySetItem
 			// 
@@ -335,11 +381,11 @@ namespace lilySharp
 		{
 			if(userList.IndexFromPoint(e.X, e.Y) != -1)
 			{
-				IUser hoveredIUser = (IUser)userList.Items[userList.IndexFromPoint(e.X, e.Y)];
-				if(hoveredIUser.Blurb == "")
-					blurbTip.SetToolTip(userList, "State: " + hoveredIUser.State);
+				IUser hoveredUser = (IUser)userList.Items[userList.IndexFromPoint(e.X, e.Y)];
+				if(hoveredUser.Blurb == "")
+					blurbTip.SetToolTip(userList, "State: " + hoveredUser.State);
 				else
-					blurbTip.SetToolTip(userList, hoveredIUser.Blurb + "\nState: " + hoveredIUser.State);
+					blurbTip.SetToolTip(userList, hoveredUser.Blurb + "\nState: " + hoveredUser.State);
 			}
 			else
 				blurbTip.RemoveAll();
@@ -497,6 +543,8 @@ namespace lilySharp
 				memoItem.Enabled = false;
 				fingerItem.Enabled = false;
 				pmItem.Enabled = false;
+				ignoreItem.Enabled = false;
+				notifySetItem.Enabled = false;
 				return;
 			}
 
@@ -506,6 +554,21 @@ namespace lilySharp
 			memoItem.Enabled = rightClickedUser.Memo;
 			fingerItem.Enabled = rightClickedUser.Finger;
 			pmItem.Enabled = true;
+
+			ignoreItem.Enabled = true;
+			publicItem.Checked = rightClickedUser.IgnoreSettings.Public;
+			allIgnoreItem.Checked = rightClickedUser.IgnoreSettings.Private;
+
+			foreach(MenuItem item in ignoreExcepItem.MenuItems)
+			{
+				if(item != addIgnoreExItem)
+					ignoreExcepItem.MenuItems.Remove(item);
+			}
+			
+			foreach(IDiscussion disc in rightClickedUser.IgnoreSettings.Exceptions)
+					ignoreExcepItem.MenuItems.Add(new MenuItem(disc.Name));
+
+			notifySetItem.Enabled = true;
 		}
 
 		/// <summary>
@@ -562,6 +625,21 @@ namespace lilySharp
 		private void DiscussionWindow_VisibleChanged(object sender, System.EventArgs e)
 		{
 			if(Visible) mdiParent.JoinedDiscList.ClearMsg(this.lilyObject as IDiscussion);
+		}
+
+		private void publicItem_Click(object sender, System.EventArgs e)
+		{
+			publicItem.Checked = !publicItem.Checked;
+		}
+
+		private void allIgnoreItem_Click(object sender, System.EventArgs e)
+		{
+			allIgnoreItem.Checked = ! allIgnoreItem.Checked;
+		}
+
+		private void addIgnoreExItem_Click(object sender, System.EventArgs e)
+		{
+			MessageBox.Show("Implement me!!!");
 		}
 
 	}

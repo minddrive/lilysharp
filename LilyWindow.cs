@@ -24,6 +24,7 @@ namespace lilySharp
 		private System.Windows.Forms.MenuItem scrollLockItem;
 		protected bool allowClose;
 		protected ILilyObject lilyObject;
+		protected LilyParent mdiParent;
 		protected char prefix;
 		private System.Windows.Forms.MenuItem menuItem1;
 		private System.Windows.Forms.MenuItem copyItem;
@@ -36,6 +37,9 @@ namespace lilySharp
 		private const Int32 CFE_AUTOCOLOR = 0x40000000;
 		private const Int32 SCF_SELECTION = 0x1;
 		private const Int32 WM_USER  = 0x400;
+		private System.Windows.Forms.MenuItem menuItem2;
+		private System.Windows.Forms.MenuItem tearItem;
+		private System.Windows.Forms.MenuItem joinItem;
 		private const Int32 EM_SETCHARFORMAT = WM_USER + 68;
 
 		[ StructLayout (LayoutKind.Sequential)]
@@ -110,6 +114,7 @@ namespace lilySharp
 			//
 			this.AcceptButton = sendBtn;
 			this.MdiParent = parent;
+			this.mdiParent = parent;
 
 			parent.UpdateUser += new LilyParent.onNotifyDelegate(onNotify);
 			parent.MdiChildActivate += new EventHandler(this.LilyWindow_Activated);
@@ -144,6 +149,9 @@ namespace lilySharp
 			this.clearItem = new System.Windows.Forms.MenuItem();
 			this.scrollLockItem = new System.Windows.Forms.MenuItem();
 			this.menuItem1 = new System.Windows.Forms.MenuItem();
+			this.tearItem = new System.Windows.Forms.MenuItem();
+			this.joinItem = new System.Windows.Forms.MenuItem();
+			this.menuItem2 = new System.Windows.Forms.MenuItem();
 			this.copyItem = new System.Windows.Forms.MenuItem();
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.userText = new System.Windows.Forms.TextBox();
@@ -172,6 +180,9 @@ namespace lilySharp
 																						 this.clearItem,
 																						 this.scrollLockItem,
 																						 this.menuItem1,
+																						 this.tearItem,
+																						 this.joinItem,
+																						 this.menuItem2,
 																						 this.copyItem});
 			this.chatAreaMenu.Popup += new System.EventHandler(this.chatAreaMenu_Popup);
 			// 
@@ -193,9 +204,27 @@ namespace lilySharp
 			this.menuItem1.Index = 2;
 			this.menuItem1.Text = "-";
 			// 
+			// tearItem
+			// 
+			this.tearItem.Index = 3;
+			this.tearItem.Text = "Tear";
+			this.tearItem.Click += new System.EventHandler(this.tearItem_Click);
+			// 
+			// joinItem
+			// 
+			this.joinItem.Index = 4;
+			this.joinItem.Text = "Join";
+			this.joinItem.Visible = false;
+			this.joinItem.Click += new System.EventHandler(this.joinItem_Click);
+			// 
+			// menuItem2
+			// 
+			this.menuItem2.Index = 5;
+			this.menuItem2.Text = "-";
+			// 
 			// copyItem
 			// 
-			this.copyItem.Index = 3;
+			this.copyItem.Index = 6;
 			this.copyItem.Text = "Copy";
 			this.copyItem.Click += new System.EventHandler(this.copyItem_Click);
 			// 
@@ -254,19 +283,9 @@ namespace lilySharp
 			set{ allowClose = value;}
 		}
 
-		/// <summary>
-		/// A wrapper for the parent class to allow use without casting
-		/// </summary>
-		/// <value>A wrapper for the parent class to allow use without casting</value>
-		protected LilyParent mdiParent
-		{
-			get{ return (LilyParent)MdiParent;}
-			set{ MdiParent = value;}
-		}
-
 		public void ProcessResponse(LeafMessage msg)
 		{
-			if(msg.Tag == "userCmd")
+			if(msg.Tag == "userCmd" && msg.Response != String.Empty)
 			{
 			
 				chatArea.SelectionFont = new Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
@@ -559,6 +578,21 @@ namespace lilySharp
 			
 		}
 		#endregion
+
+		private void tearItem_Click(object sender, System.EventArgs e)
+		{
+			this.MdiParent = null;
+			joinItem.Visible = true;
+			tearItem.Visible = false;
+		}
+
+		private void joinItem_Click(object sender, System.EventArgs e)
+		{
+			this.MdiParent = this.mdiParent;
+			tearItem.Visible = true;
+			joinItem.Visible = false;
+			this.Location = new Point(10,10);
+		}
 
 	}
 }

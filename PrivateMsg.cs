@@ -127,7 +127,7 @@ namespace lilySharp
 					post(this.lilyObject.Name + " has connected\n", Color.Maroon);
 					break;
 				case "here":
-					post(this.lilyObject.Name + " is now hwere\n", Color.Maroon);
+					post(this.lilyObject.Name + " is now here\n", Color.Maroon);
 					break;
 				case "attach":
 					post(this.lilyObject.Name + " has attached\n", Color.Maroon);

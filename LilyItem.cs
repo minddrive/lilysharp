@@ -236,13 +236,16 @@ namespace lilySharp
 		private string blurb,
 			           pronoun;
 
-		private bool finger = false,
-					 info = false,
-				     memo = false;
+		private bool finger,
+					 info,
+				     memo;
 
 		private DateTime login,
 			             lastInput;
 		private States state;
+
+		private Ignore ignore;
+
 
 		public User(Hashtable attributes)
 		{
@@ -252,6 +255,8 @@ namespace lilySharp
 			pronoun   = attributes["PRONOUN"] == null ? "" : attributes["PRONOUN"] as string;
 			login     = attributes["LOGIN"]   == null ? DateTime.Now : Util.ConvertFromUnixTime(attributes["LOGIN"] as string);
 			lastInput = attributes["INPUT"]   == null ? DateTime.Now : Util.ConvertFromUnixTime(attributes["INPUT"] as string);
+
+			ignore = new Ignore(false,false);
 
 			// Determine state
 			switch(attributes["STATE"] as string)
@@ -352,6 +357,12 @@ namespace lilySharp
 		{
 			get { return memo;}
 			set { memo = value;}
+		}
+
+		public Ignore IgnoreSettings
+		{
+			get { return ignore;}
+			set { ignore = value;}
 		}
 		#endregion
 

@@ -20,10 +20,10 @@ namespace lilySharp
 			hash.Clear();
 		}
 
-		public ILilyObject this [string tag]
+		public ILilyObject this [string id]
 		{
-			get	{ return hash[tag] as ILilyObject;}
-			set{ hash[tag] = value;}
+			get	{ return hash[id] as ILilyObject;}
+			set{ hash[id] = value;}
 		}
 
 		public ILilyObject this [ object obj ]
@@ -45,9 +45,19 @@ namespace lilySharp
 			}
 		}
 
-		public void Remove(string tag)
+		public void Remove(string id)
 		{
-			hash.Remove(tag);
+			hash.Remove(id);
+		}
+
+		public ILilyObject GetByName(string name)
+		{
+			foreach(DictionaryEntry entry in hash)
+			{
+				if( ((ILilyObject)entry.Value).Name == name)
+					return entry.Value as ILilyObject;
+			}
+			return null;
 		}
 
 		public IEnumerator GetEnumerator()

@@ -670,6 +670,7 @@ namespace lilySharp
 				outStream.WriteLine("/set message_echo yes");
 				outStream.WriteLine("#$# client LilySharp 0.60");
 				this.PostMessage(new LeafMessage("/where " + me.Name, "where", this));
+				this.PostMessage(new LeafMessage("/ignore", "ignore", this));
 				joinItem.Enabled = true;
 				createItem.Enabled = true;
 			}
@@ -1378,6 +1379,36 @@ namespace lilySharp
 						joinedDiscList.Add((IDiscussion)database[ getObjectId(id.Trim()) ]);
 					}
 					break;
+				case "ignore":
+					Match ignoreMatch = Regex.Match(msg.Response, @"\(you are currently ignoring (.*) and being ignored by (.*)\)");
+					if(!ignoreMatch.Success || ( ignoreMatch.Result("$1") == "no one" && ignoreMatch.Result("$2") == "no one"))
+						return;
+					
+					foreach(Match match in Regex.Matches(ignoreMatch.Result("$1"), @",?([^{]*) {([^}]*)}") )
+					{
+						IUser ignoredUser = database.GetByName(match.Result("$1").Trim()) as IUser;
+						if(ignoredUser == null)
+							MessageBox.Show("Bad user name: |" + match.Result("$1").Trim() + "|");
+						else
+						{
+							console.Post("Ignoring " + ignoredUser.Name + " in " + match.Result("$2"));
+							Match whereIgnored = Regex.Match(match.Result("$2"), @"(privately)?( and )?(publicly)?(( except )|( and )|( ) )?(in (.*))?");
+							if(whereIgnored.Success)
+							{
+								ignoredUser.IgnoreSettings.Private = whereIgnored.Result("$1") != String.Empty;
+								ignoredUser.IgnoreSettings.Public  = whereIgnored.Result("$3") != String.Empty;
+								if(whereIgnored.Result("$9") != String.Empty)
+									foreach(string discName in whereIgnored.Result("$9").Split(",".ToCharArray()))
+										ignoredUser.IgnoreSettings.Exceptions.Add(database.GetByName(discName.Trim()));
+
+								//console.Post("Private? " + (whereIgnored.Result("$1") == String.Empty ? "False" : "True"));
+								//console.Post("Public? " + (whereIgnored.Result("$3") == String.Empty ? "False" : "True"));
+								//console.Post("In Disc: " + whereIgnored.Result("$9") + "\n");
+							}
+						}
+
+					}
+					break;
 				default:
 					break;
 			}
@@ -1415,12 +1446,10 @@ namespace lilySharp
 				if(joinedDiscList.Visible)
 				{
 					joinedDiscList.Hide();
-					//discBtn.Pushed = false;
 				}
 				else
 				{
 					joinedDiscList.Show();
-					//discBtn.Pushed = true;
 				}
 			}
 		}
@@ -1430,7 +1459,6 @@ namespace lilySharp
 			if(!joinedDiscList.Visible)
 			{
 				joinedDiscList.Show();
-				//discBtn.Pushed = true;
 			}
 		}
 	}

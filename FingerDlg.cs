@@ -286,7 +286,6 @@ namespace lilySharp
 
 					// Search for and set email links
 					foreach(Match match in Regex.Matches(emailLbl.Text, @"([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)")) 
-					//foreach(Match match in Regex.Matches(emailLbl.Text, @"[^\s@]+@[^\s]+\.[^\s]*[\w]"))
 					{
 						emailLbl.Links.Add(match.Index, match.Length, match.Value);
 					}

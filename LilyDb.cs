@@ -9,7 +9,7 @@ namespace lilySharp
 	public interface ILilyDb : IEnumerable
 	{
         
-		ILilyObject this [ string oTag ]
+		ILilyObject this [ string oID ]
 		{
 			get;
 			set;
@@ -20,9 +20,11 @@ namespace lilySharp
 			get;
 			set;
 		}
-		void Clear();
 
+		void Clear();
 		void Remove(string tag);
+		ILilyObject GetByName(string oID);
+
 	}
 
 	public interface ILilyObject
@@ -85,6 +87,12 @@ namespace lilySharp
 			get;
 			set;
 		}
+		
+		Ignore IgnoreSettings
+		{
+			get;
+			set;
+		}
 	}
 
 	public interface IDiscussion : ILilyObject
@@ -128,6 +136,22 @@ namespace lilySharp
 		{
 			get;
 			set;
+		}
+
+	}
+
+	public class Ignore
+	{
+		public bool Public,
+			        Private;
+
+		public ArrayList Exceptions;
+
+		public Ignore(bool pub, bool priv)
+		{
+			Public = pub;
+			Private = priv;
+			Exceptions = new ArrayList();
 		}
 	}
 }
